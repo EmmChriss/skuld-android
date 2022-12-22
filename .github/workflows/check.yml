@@ -7,16 +7,7 @@ on:
       - master
 
 jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Run Kotlin Linter
-        run: ./gradlew ktlintCheck
-
-      - name: Run Unit Tests
-        run: ./gradlew test
-
-  build:
+  main:
     needs: [check]
     runs-on: ubuntu-latest
     steps:
@@ -27,6 +18,12 @@ jobs:
         uses: actions/setup-java@v1.4.3
         with:
           java-version: 1.8
+
+      - name: Run Kotlin Linter
+        run: ./gradlew ktlintCheck
+
+      - name: Run Unit Tests
+        run: ./gradlew test
 
       - name: Build all artifacts
         id: buildAllApks
