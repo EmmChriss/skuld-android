@@ -12,8 +12,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Unpack google-services.json
+        run: 'echo "$SECRET" > app/google-services.json'
+        shell: bash
+        env:
+          SECRET: ${{secrets.GOOGLE_SERVICES_JSON}}
+
       - uses: actions/setup-java@v3
         with:
+          distribution: temurin
           java-version: 19
           check-latest: true
   
