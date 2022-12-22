@@ -1,0 +1,40 @@
+name: Gradle Check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Unpack google-services.json
+        run: 'echo "$SECRET" > app/google-services.json'
+        shell: bash
+        env:
+          SECRET: ${{secrets.GOOGLE_SERVICES_JSON}}
+
+      - uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 19
+          check-latest: true
+  
+      - name: Run linter
+        uses: eskatos/gradle-command-action@v2
+        with:
+          arguments: ktlintCheck
+
+      - name: Run tests
+        uses: eskatos/gradle-command-action@v2
+        with:
+          arguments: test
+
+      - name: Build all artifacts
+        uses: eskatos/gradle-command-action@v2
+        with:
+          arguments: assembleRelease
