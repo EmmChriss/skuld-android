@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
                     drawerContent = {
                         Button(onClick = {currentID.value = 0}, Modifier.fillMaxWidth()){Text("Tasks")}
                         Button(onClick = {currentID.value = 1}, Modifier.fillMaxWidth()){Text("New note")}
-                                    Text(text = "Sutoclosing drawer: SOON")},
+                                    Text(text = "Autoclosing drawer: SOON")},
                     topBar = {
                         val titleTasks = "Tasks"
                         val titleNewNote = "Create new note"
