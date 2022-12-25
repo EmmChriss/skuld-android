@@ -1,5 +1,7 @@
 package com.lab.skuld.ui
 
+import android.annotation.SuppressLint
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.*
@@ -10,6 +12,12 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthSettings
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import com.lab.skuld.ui.screens.ShowLoginScreen
 import com.lab.skuld.ui.screens.ShowNewNoteScreen
 import com.lab.skuld.ui.screens.ShowTasksScreen
 import com.lab.skuld.ui.theme.SkuldFrontendTheme
@@ -19,7 +27,29 @@ import kotlinx.coroutines.launch
 @Composable
 fun App() {
     SkuldFrontendTheme {
-        Navigation()
+        Auth {
+            Navigation()
+        }
+    }
+}
+
+@Composable
+fun Auth(content: @Composable () -> Unit) {
+    var loggedIn by remember { mutableStateOf(Firebase.auth.currentUser != null) }
+    DisposableEffect(Unit) {
+        val listener = FirebaseAuth.AuthStateListener { auth ->
+            loggedIn = auth.currentUser != null
+        }
+        Firebase.auth.addAuthStateListener(listener)
+        onDispose {
+            Firebase.auth.removeAuthStateListener(listener)
+        }
+    }
+
+    if (!loggedIn) {
+        ShowLoginScreen()
+    } else {
+        content()
     }
 }
 
@@ -40,6 +70,7 @@ data class Navigator (
     val pop: () -> Unit
 )
 
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun Navigation() {
     val scaffoldState = rememberScaffoldState()
