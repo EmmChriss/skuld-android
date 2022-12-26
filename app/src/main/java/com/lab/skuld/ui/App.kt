@@ -3,15 +3,23 @@ package com.lab.skuld.ui
 import android.annotation.SuppressLint
 import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthSettings
 import com.google.firebase.auth.FirebaseUser
@@ -22,6 +30,10 @@ import com.lab.skuld.ui.screens.ShowNewNoteScreen
 import com.lab.skuld.ui.screens.ShowTasksScreen
 import com.lab.skuld.ui.theme.SkuldFrontendTheme
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 
 // Main Composable entry-point
 @Composable
@@ -70,7 +82,7 @@ data class Navigator (
     val pop: () -> Unit
 )
 
-@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
+
 @Composable
 fun Navigation() {
     val scaffoldState = rememberScaffoldState()
@@ -81,32 +93,61 @@ fun Navigation() {
         Screen.Tasks(),
         Screen.NewTask()
     ) }
-    val currentMenuOption: MutableState<Screen> = remember { mutableStateOf(
+    var currentMenuOption: Screen by remember { mutableStateOf(
         /* Default screen */
         Screen.Tasks()
     ) }
 
     /* Utility method in navigation */
     val navigateTo: (Screen) -> Unit = remember { { screen ->
-        currentMenuOption.value = screen
+        currentMenuOption = screen
 
         // make sure drawer is closed
         if (scaffoldState.drawerState.isOpen)
             scope.launch { scaffoldState.drawerState.close() }
     } }
 
+    /* Log out modal dialog */
+    var openLogoutDialog by remember { mutableStateOf(false) }
+    if (openLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { openLogoutDialog = false },
+            title = { Text(text = "Are you sure?") },
+            text = { Text("Your local data will be cleared") },
+            buttons = {
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(all = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Button(
+                        onClick = { Firebase.auth.signOut() }
+                    ) { Text("Yes") }
+                    Button(
+                        onClick = { openLogoutDialog = false }
+                    ) { Text("No") }
+                }
+            }
+        )
+    }
+
     Scaffold(
         scaffoldState = scaffoldState,
         drawerContent = {
             menuOptions.forEach {
-                MenuOption(it) { navigateTo(it) }
+                MenuOption(it.title) { navigateTo(it) }
+            }
+            MenuOption("Log out") {
+                openLogoutDialog = true
             }
         },
         topBar = {
             TopAppBar(
-                title = { Text(currentMenuOption.value.title) },
+                title = { Text(currentMenuOption.title) },
                 navigationIcon = {
-                    when (currentMenuOption.value.onBack) {
+                    when (currentMenuOption.onBack) {
                         null -> IconButton(
                             onClick = { scope.launch {
                                 scaffoldState.drawerState.open()
@@ -115,13 +156,9 @@ fun Navigation() {
                         )
                         else -> {
                             IconButton(
-                                onClick = { currentMenuOption.value = currentMenuOption.value.onBack!! },
+                                onClick = { currentMenuOption = currentMenuOption.onBack!! },
                                 content = { Icon(Icons.Filled.ArrowBack, contentDescription = "Localized description") }
                             )
-                            // make sure back presses are handled correctly
-                            BackHandler {
-                                navigateTo(currentMenuOption.value.onBack!!)
-                            }
                         }
                     }
                 }
@@ -131,11 +168,28 @@ fun Navigation() {
         floatingActionButton = {
             FloatingActionButton(
                 content = { Icon(Icons.Filled.Add, contentDescription = "Localized description") },
-                onClick = { currentMenuOption.value = Screen.NewTask() }
+                onClick = { currentMenuOption = Screen.NewTask() }
             )
         },
-        content = { currentMenuOption.value.content }
+        content = {
+            Box(
+                modifier = Modifier
+                    .padding(it)
+                    .fillMaxSize()
+            ) {
+                currentMenuOption.content()
+            }
+        }
     )
+
+    // make sure back presses are handled correctly
+    if (openLogoutDialog) {
+        BackHandler { openLogoutDialog = false }
+    } else if (scaffoldState.drawerState.isOpen) {
+        BackHandler { scope.launch { scaffoldState.drawerState.close() } }
+    } else if (currentMenuOption.onBack != null) {
+        BackHandler { navigateTo(currentMenuOption.onBack!!) }
+    }
 }
 
 @Composable
@@ -144,8 +198,8 @@ fun Menu() {
 }
 
 @Composable
-fun MenuOption(screen: Screen, onClick: () -> Unit) {
-    Button(onClick = onClick, Modifier.fillMaxWidth()) { Text(screen.title) }
+fun MenuOption(text: String, onClick: () -> Unit) {
+    Button(onClick = onClick, Modifier.fillMaxWidth()) { Text(text) }
 }
 
 @Composable
