@@ -8,9 +8,9 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import com.lab.skuld.ui.screens.ExampleDocumentList
+import com.lab.skuld.ui.screens.TemplateListView
 import com.lab.skuld.ui.theme.SkuldfrontendTheme
 import kotlinx.coroutines.launch
 
@@ -30,14 +30,17 @@ class MainActivity : ComponentActivity() {
                     drawerContent = {
                         Button(onClick = {scope.launch { scaffoldState.drawerState.close() };currentID.value = 0}, Modifier.fillMaxWidth()){Text("Tasks")}
                         Button(onClick = {scope.launch { scaffoldState.drawerState.close() };currentID.value = 1}, Modifier.fillMaxWidth()){Text("New note")}
-                                    Text(text = "Autoclosing drawer: SOON")},
+                                    },
                     topBar = {
                         val titleTasks = "Tasks"
                         val titleNewNote = "Create new note"
+
                         var currentTitle = ""
                         when (currentID.value){
                             0 -> currentTitle = titleTasks
                             1 -> currentTitle = titleNewNote
+                            2 -> currentTitle = titleNewNote
+                            3 -> currentTitle = titleNewNote
                             else -> currentTitle = "How??"
                         }
 
@@ -66,8 +69,14 @@ class MainActivity : ComponentActivity() {
                             ExampleDocumentList()
                         }
                         if(currentID.value == 1) {
-                            PlaceholderNewNote()
+                            TemplateListView()
                         }
+                       /* if(currentID.value == 2) {
+                            NewNote()
+                        }
+                        if(currentID.value == 3) {
+                            NewNoteFromTemplate ()
+                        }*/
                     }
                 )
             }
@@ -77,17 +86,7 @@ class MainActivity : ComponentActivity() {
 
 
 
-@Composable
-fun PlaceholderNewNote(){
-    var textInput by rememberSaveable { mutableStateOf("Text") }
-    TextField(
-        value = textInput,
-        onValueChange = {
-            textInput = it
-        },
-        label = { Text("New note") }
-    )
-}
+
 
 
 @Composable
