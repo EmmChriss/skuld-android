@@ -8,8 +8,10 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.ViewModel
 import com.lab.skuld.ui.screens.ShowNewNoteScreen
 import com.lab.skuld.ui.screens.ShowTasksScreen
 import com.lab.skuld.ui.theme.SkuldFrontendTheme
@@ -24,11 +26,16 @@ fun App() {
 }
 
 sealed class Screen(val title: String, val content: @Composable () -> Unit, val onBack: Screen? = null ) {
-    class Tasks() : Screen(
+    class Custom(
+        title: String,
+        content: @Composable () -> Unit,
+        onBack: Screen?
+    ) : Screen(title, content, onBack)
+    class Tasks : Screen(
         title = "Tasks",
         content = { ShowTasksScreen() }
     )
-    class NewTask() : Screen(
+    class NewTask : Screen(
         title = "New Task",
         content = { ShowNewNoteScreen() },
         onBack = Tasks()
@@ -37,8 +44,19 @@ sealed class Screen(val title: String, val content: @Composable () -> Unit, val 
 
 data class Navigator (
     val push: (Screen) -> Unit,
-    val pop: () -> Unit
+    val pop: () -> Unit,
+    val set: (Screen) -> Unit,
 )
+
+class UiContextViewModel : ViewModel() {
+    private var _nav: Navigator? = null
+    val nav
+        get() = _nav!!
+
+    fun setNav(nav: Navigator) {
+        this._nav = nav
+    }
+}
 
 @Composable
 fun Navigation() {
@@ -50,19 +68,35 @@ fun Navigation() {
         Screen.Tasks(),
         Screen.NewTask()
     ) }
-    val currentMenuOption: MutableState<Screen> = remember { mutableStateOf(
+    var currentMenuOption: Screen by remember { mutableStateOf(
         /* Default screen */
         Screen.Tasks()
     ) }
 
     /* Utility method in navigation */
     val navigateTo: (Screen) -> Unit = remember { { screen ->
-        currentMenuOption.value = screen
+        currentMenuOption = screen
 
         // make sure drawer is closed
         if (scaffoldState.drawerState.isOpen)
             scope.launch { scaffoldState.drawerState.close() }
     } }
+
+    /* Create ViewModel containing navigation callbacks */
+    val viewModel : UiContextViewModel = viewModel()
+    viewModel.setNav(Navigator(
+        push = { screen ->
+            navigateTo(
+                Screen.Custom(
+                    title = screen.title,
+                    content = screen.content,
+                    onBack = currentMenuOption
+                )
+            )
+        },
+        pop = { currentMenuOption.onBack?.let { screen -> navigateTo(screen) } },
+        set = { screen -> currentMenuOption = screen }
+    ))
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -73,9 +107,9 @@ fun Navigation() {
         },
         topBar = {
             TopAppBar(
-                title = { Text(currentMenuOption.value.title) },
+                title = { Text(currentMenuOption.title) },
                 navigationIcon = {
-                    when (currentMenuOption.value.onBack) {
+                    when (currentMenuOption.onBack) {
                         null -> IconButton(
                             onClick = { scope.launch {
                                 scaffoldState.drawerState.open()
@@ -84,12 +118,12 @@ fun Navigation() {
                         )
                         else -> {
                             IconButton(
-                                onClick = { currentMenuOption.value = currentMenuOption.value.onBack!! },
+                                onClick = { currentMenuOption = currentMenuOption.onBack!! },
                                 content = { Icon(Icons.Filled.ArrowBack, contentDescription = "Localized description") }
                             )
                             // make sure back presses are handled correctly
                             BackHandler {
-                                navigateTo(currentMenuOption.value.onBack!!)
+                                navigateTo(currentMenuOption.onBack!!)
                             }
                         }
                     }
@@ -100,24 +134,14 @@ fun Navigation() {
         floatingActionButton = {
             FloatingActionButton(
                 content = { Icon(Icons.Filled.Add, contentDescription = "Localized description") },
-                onClick = { currentMenuOption.value = Screen.NewTask() }
+                onClick = { currentMenuOption = Screen.NewTask() }
             )
         },
-        content = { currentMenuOption.value.content }
+        content = { currentMenuOption.content() }
     )
-}
-
-@Composable
-fun Menu() {
-
 }
 
 @Composable
 fun MenuOption(screen: Screen, onClick: () -> Unit) {
     Button(onClick = onClick, Modifier.fillMaxWidth()) { Text(screen.title) }
-}
-
-@Composable
-fun AppBar() {
-
 }
