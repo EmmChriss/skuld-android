@@ -5,14 +5,18 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -26,7 +30,7 @@ data class Document(var header: String= "Header", var image: Painter, var  mapDo
 
 fun findFirstString(mapDocumentContents: Map<String, *>): String{
     val filteredMap = mapDocumentContents.filter { (key, value) ->  value is String}
-    if (!filteredMap.isEmpty()) {
+    if (filteredMap.isNotEmpty()) {
         return filteredMap.iterator().next().value as String
     }
     return ""
@@ -45,14 +49,28 @@ fun firstDrawable(mapDocumentContents: Map<String, *>): ImageView {
 
 @Composable
 fun DocumentPreview(document: Document) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        if(document.image != null){
-            document.image = painterResource(id = R.drawable.image1)
-        }
-        Image(document.image, contentDescription = "DocImage")
-        Column {
-            Text(document.header)
-            Text(findFirstString(document.mapDocumentContents))
+
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(70.dp)
+            .padding(10.dp)
+    )
+    {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (document.image != null) {
+                document.image = painterResource(id = R.drawable.image1)
+            }
+            Image(
+                document.image,
+                contentDescription = "DocImage",
+                modifier = Modifier.clip(RoundedCornerShape(percent = 10))
+            )
+            Spacer(modifier = Modifier.width(15.dp))
+            Column {
+                Text(document.header)
+                Text(findFirstString(document.mapDocumentContents))
+            }
         }
     }
 
@@ -73,7 +91,7 @@ fun ExamplePreview() {
     DocumentPreview(
         document = Document(header = "Example header",
         image = painterResource(id = R.drawable.image1),
-        mapDocumentContents = mutableMapOf("one" to 1, "two" to 2, "three" to 3, "four" to "Hidden String", "five" to 5))
+        mapDocumentContents = mutableMapOf("one" to 1, "two" to 2, "three" to 3, "four" to "Subheader - First string value in map", "five" to 5))
     )
 }
 
@@ -82,16 +100,7 @@ fun ExamplePreview() {
 fun ExampleDocumentList() {
     LazyColumn {
         items(count = 100) {
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .padding(10.dp)
-            )
-            {
-
                 ExamplePreview()
-            }
 
         }
     }

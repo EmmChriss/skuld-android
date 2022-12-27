@@ -3,11 +3,13 @@ package com.lab.skuld
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.lab.skuld.ui.screens.ExampleDocumentList
 import com.lab.skuld.ui.screens.TemplateListView
@@ -28,9 +30,10 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     scaffoldState = scaffoldState,
                     drawerContent = {
-                        Button(onClick = {scope.launch { scaffoldState.drawerState.close() };currentID.value = 0}, Modifier.fillMaxWidth()){Text("Tasks")}
-                        Button(onClick = {scope.launch { scaffoldState.drawerState.close() };currentID.value = 1}, Modifier.fillMaxWidth()){Text("New note")}
-                                    },
+                        Column(modifier = Modifier.fillMaxWidth(),horizontalAlignment = Alignment.CenterHorizontally) {
+                            Button(onClick = {scope.launch { scaffoldState.drawerState.close() };currentID.value = 0}, Modifier.fillMaxWidth(0.7f)){Text("Tasks")}
+                            Button(onClick = {scope.launch { scaffoldState.drawerState.close() };currentID.value = 1}, Modifier.fillMaxWidth(0.7f)){Text("New note")}
+                        } },
                     topBar = {
                         val titleTasks = "Tasks"
                         val titleNewNote = "Create new note"
