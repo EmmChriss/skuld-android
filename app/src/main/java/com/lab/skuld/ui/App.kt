@@ -15,6 +15,7 @@ import androidx.compose.material.FabPosition
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
@@ -22,9 +23,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.ViewModel
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.lab.skuld.ui.screens.LoadingState
 import com.lab.skuld.ui.screens.ShowLoginScreen
 import com.lab.skuld.ui.screens.ShowNewNoteScreen
 import com.lab.skuld.ui.screens.ShowTasksScreen
@@ -68,7 +73,7 @@ fun Auth(content: @Composable () -> Unit) {
         }
     }
 
-    if (false) {
+    if (!loggedIn) {
         ShowLoginScreen()
     } else {
         content()
@@ -77,22 +82,44 @@ fun Auth(content: @Composable () -> Unit) {
 }
 
 sealed class Screen(val title: String, val content: @Composable () -> Unit, val onBack: Screen? = null ) {
-    class Tasks() : Screen(
+    class Custom(
+        title: String,
+        content: @Composable () -> Unit,
+        onBack: Screen?
+    ) : Screen(title, content, onBack)
+    class Tasks : Screen(
         title = "Tasks",
         content = { ShowTasksScreen() }
     )
-    class NewTask() : Screen(
+    class NewTask : Screen(
         title = "New Task",
         content = { ShowNewNoteScreen() },
         onBack = Tasks()
     )
 }
 
-data class Navigator (
+data class Navigator(
     val push: (Screen) -> Unit,
-    val pop: () -> Unit
+    val pop: () -> Unit,
+    val set: (Screen) -> Unit,
 )
 
+class UiContextViewModel : ViewModel() {
+    private var _nav: Navigator? = null
+    private var _loadingBar:  MutableState<Boolean>? = null
+    val nav
+        get() = _nav!!
+
+    var loadingBarEnabled by _loadingBar!!
+
+    fun setNav(nav: Navigator) {
+        this._nav = _nav ?: nav
+    }
+
+    fun setLoadingBar(loadingBar: MutableState<Boolean>) {
+        this._loadingBar = _loadingBar ?: loadingBar
+    }
+}
 
 @Composable
 fun Navigation() {
@@ -109,6 +136,8 @@ fun Navigation() {
         Screen.Tasks()
     ) }
 
+    val loadingBar = remember { mutableStateOf(false) }
+
     /* Utility method in navigation */
     val navigateTo: (Screen) -> Unit = remember { { screen ->
         currentMenuOption = screen
@@ -117,6 +146,23 @@ fun Navigation() {
         if (scaffoldState.drawerState.isOpen)
             scope.launch { scaffoldState.drawerState.close() }
     } }
+
+    /* Create ViewModel containing navigation callbacks */
+    val viewModel : UiContextViewModel = viewModel()
+    viewModel.setNav(Navigator(
+        push = { screen ->
+            navigateTo(
+                Screen.Custom(
+                    title = screen.title,
+                    content = screen.content,
+                    onBack = currentMenuOption
+                )
+            )
+        },
+        pop = { currentMenuOption.onBack?.let { screen -> navigateTo(screen) } },
+        set = { screen -> currentMenuOption = screen }
+    ))
+    viewModel.setLoadingBar(loadingBar)
 
     /* Log out modal dialog */
     var openLogoutDialog by remember { mutableStateOf(false) }
@@ -178,6 +224,9 @@ fun Navigation() {
                     }
                 }
             )
+            if (loadingBar.value) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            }
         },
         floatingActionButtonPosition = FabPosition.End,
         floatingActionButton = {
@@ -208,16 +257,7 @@ fun Navigation() {
 }
 
 @Composable
-fun Menu() {
-
+fun MenuOption(title: String, onClick: () -> Unit) {
+    Button(onClick = onClick, Modifier.fillMaxWidth(0.7f)) { Text(title) }
 }
 
-@Composable
-fun MenuOption(text: String, onClick: () -> Unit) {
-    Button(onClick = onClick, Modifier.fillMaxWidth(0.7f)) { Text(text) }
-}
-
-@Composable
-fun AppBar() {
-
-}
