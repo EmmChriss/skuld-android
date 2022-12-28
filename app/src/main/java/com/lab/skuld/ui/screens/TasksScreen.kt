@@ -39,18 +39,20 @@ class MaybeTask {
     val id = ""
     val title: String? = null
     val checked: Boolean? = null
+    val contents: String? = null
 }
 
 data class Task(
     val id: String,
     val title: String,
-    val checked: Boolean
+    val checked: Boolean,
+    val contents: String?
 )
 
 fun maybeToTask(maybe: MaybeTask) =
     maybe.title?.let { title ->
         maybe.checked?.let { checked ->
-            Task(maybe.id, title, checked)
+            Task(maybe.id, title, checked, maybe.contents)
         }
     }
 
@@ -79,6 +81,9 @@ fun ShowTasksScreen() {
             )
             {
                 Text(documents[it].title)
+                if (documents[it].contents != null) {
+                    Text(documents[it].contents.toString())
+                }
             }
         }
     }

@@ -11,3 +11,4 @@ class MainActivity : ComponentActivity() {
         setContent { App() }
     }
 }
+

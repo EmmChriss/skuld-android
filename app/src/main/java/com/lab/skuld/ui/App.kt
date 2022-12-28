@@ -1,17 +1,46 @@
 package com.lab.skuld.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.*
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.Button
+import androidx.compose.material.Divider
+import androidx.compose.material.FabPosition
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.ViewModel
+import androidx.compose.material.rememberScaffoldState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import com.lab.skuld.ui.screens.ShowLoginScreen
 import com.lab.skuld.ui.screens.ShowNewNoteScreen
 import com.lab.skuld.ui.screens.ShowTasksScreen
 import com.lab.skuld.ui.theme.SkuldFrontendTheme
@@ -21,8 +50,32 @@ import kotlinx.coroutines.launch
 @Composable
 fun App() {
     SkuldFrontendTheme {
-        Navigation()
+        Auth {
+            Navigation()
+        }
     }
+}
+
+
+@Composable
+fun Auth(content: @Composable () -> Unit) {
+    var loggedIn by remember { mutableStateOf(Firebase.auth.currentUser != null) }
+    DisposableEffect(Unit) {
+        val listener = FirebaseAuth.AuthStateListener { auth ->
+            loggedIn = auth.currentUser != null
+        }
+        Firebase.auth.addAuthStateListener(listener)
+        onDispose {
+            Firebase.auth.removeAuthStateListener(listener)
+        }
+    }
+
+    if (!loggedIn) {
+        ShowLoginScreen()
+    } else {
+        content()
+    }
+    
 }
 
 sealed class Screen(val title: String, val content: @Composable () -> Unit, val onBack: Screen? = null ) {
@@ -98,11 +151,44 @@ fun Navigation() {
         set = { screen -> currentMenuOption = screen }
     ))
 
+    /* Log out modal dialog */
+    var openLogoutDialog by remember { mutableStateOf(false) }
+    if (openLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { openLogoutDialog = false },
+            title = { Text(text = "Are you sure?") },
+            text = { Text("Your local data will be cleared") },
+            buttons = {
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(all = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Button(
+                        onClick = { Firebase.auth.signOut() }
+                    ) { Text("Yes") }
+                    Button(
+                        onClick = { openLogoutDialog = false }
+                    ) { Text("No") }
+                }
+            }
+        )
+    }
+
     Scaffold(
         scaffoldState = scaffoldState,
         drawerContent = {
-            menuOptions.forEach {
-                MenuOption(it) { navigateTo(it) }
+            Column(modifier = Modifier.fillMaxWidth(),horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Skuld", modifier = Modifier.padding(16.dp), fontSize = 40.sp, fontWeight = FontWeight.Bold)
+                Divider(modifier = Modifier.padding(7.dp))
+                menuOptions.forEach {
+                    MenuOption(it.title) { navigateTo(it) }
+                }
+                MenuOption("Log out") {
+                    openLogoutDialog = true
+                }
             }
         },
         topBar = {
@@ -121,10 +207,6 @@ fun Navigation() {
                                 onClick = { currentMenuOption = currentMenuOption.onBack!! },
                                 content = { Icon(Icons.Filled.ArrowBack, contentDescription = "Localized description") }
                             )
-                            // make sure back presses are handled correctly
-                            BackHandler {
-                                navigateTo(currentMenuOption.onBack!!)
-                            }
                         }
                     }
                 }
@@ -137,11 +219,29 @@ fun Navigation() {
                 onClick = { currentMenuOption = Screen.NewTask() }
             )
         },
-        content = { currentMenuOption.content() }
+        content = {
+            Box(
+                modifier = Modifier
+                    .padding(it)
+                    .fillMaxSize()
+            ) {
+                currentMenuOption.content()
+            }
+        }
     )
+
+    // make sure back presses are handled correctly
+    if (openLogoutDialog) {
+        BackHandler { openLogoutDialog = false }
+    } else if (scaffoldState.drawerState.isOpen) {
+        BackHandler { scope.launch { scaffoldState.drawerState.close() } }
+    } else if (currentMenuOption.onBack != null) {
+        BackHandler { navigateTo(currentMenuOption.onBack!!) }
+    }
 }
 
 @Composable
-fun MenuOption(screen: Screen, onClick: () -> Unit) {
-    Button(onClick = onClick, Modifier.fillMaxWidth()) { Text(screen.title) }
+fun MenuOption(title: String, onClick: () -> Unit) {
+    Button(onClick = onClick, Modifier.fillMaxWidth(0.7f)) { Text(title) }
 }
+
