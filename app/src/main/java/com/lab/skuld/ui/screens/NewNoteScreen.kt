@@ -16,7 +16,7 @@ import androidx.compose.material.TextButton
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -31,7 +31,7 @@ import androidx.compose.ui.window.Dialog
 fun ShowNewNoteScreen(){
     var newHeader by remember { mutableStateOf("") }
 
-    var textElements by remember { mutableStateMapOf<String, String>() }
+    val textElements = remember { mutableStateListOf<String>() }
 
     Column(modifier = Modifier.padding(16.dp)) {
         @Composable
@@ -71,7 +71,7 @@ fun ShowNewNoteScreen(){
                         TextButton(
                             onClick = {
                                 newHeader = elementHeader
-                                textElements = textElements + Pair(elementHeader, "")
+                                textElements.add(elementHeader)
                                 isDialogVisible = false
                             },
                             content = { Text("OK") },
@@ -83,15 +83,22 @@ fun ShowNewNoteScreen(){
                 )
             }
         }
-        for (values in textElements){
-            
+        for (value in textElements){
+            TextElement(value)
+        }
+        if(newHeader != ""){
+            TextElement(newHeader)
         }
         NewElementDialog()
-        if(newHeader != ""){
-        TextElement(newHeader)
-        }
+
     }
 }
+
+
+
+
+
+
 
 
 @Composable
@@ -124,62 +131,6 @@ fun MyAlertDialog(
         }
     }
 }
-/*
-@Composable
-fun Greeting() {
-    var elementHeader by remember { mutableStateOf("") }
-    var testMessage by remember { mutableStateOf("") }
-    var isDialogVisible by remember { mutableStateOf(false) }
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = testMessage.ifEmpty { "Element" },
-            modifier = Modifier.padding(16.dp),
-            style = MaterialTheme.typography.h5,
-        )
-        Button(
-            onClick = { isDialogVisible = true },
-            content = { Text("Add element") },
-        )
-    }
-    if (isDialogVisible) {
-        MyAlertDialog(
-            title = {
-                Text(
-                    text = "Enter Name",
-                    style = MaterialTheme.typography.h6,
-                )
-            },
-            content = {
-                OutlinedTextField(
-                    value = elementHeader,
-                    onValueChange = { elementHeader = it },
-                    label = { Text("Name") },
-                )
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { isDialogVisible = false },
-                    content = { Text("nevermind") },
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        testMessage = elementHeader
-                        isDialogVisible = false
-                    },
-                    content = { Text("OK") },
-                )
-            },
-            onDismiss = {
-                isDialogVisible = false
-            },
-        )
-    }
-}
-*/
 
 
 
@@ -195,125 +146,3 @@ fun TextElement(label: String = "New Element") {
     )
 }
 
-@Composable
-fun ImageElement() {
-    
-}
-/*
-@Composable
-fun NewElementSetup() {
-    Column(modifier = Modifier.padding(16.dp)) {
-        val textFieldCount by remember { mutableStateOf (1) }
-        repeat(textFieldCount) {
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = step1,
-                onValueChange = {
-                    viewModel.onStep1Changed(it)
-                },
-                label = {
-                    Text(text = "Step 1...")
-                },
-                shape = RoundedCornerShape(8.dp),
-                colors = TextFieldDefaults.textFieldColors(
-                    backgroundColor = Color.Transparent),
-                trailingIcon = {
-                    Icon(
-                        modifier = Modifier.padding(start=10.dp),
-                        imageVector = Icons.Filled.Image,
-                        tint= Color.Blue,
-                        contentDescription = "Select Image"
-                    )
-                }
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-        Button(onClick = {
-            textFieldCount++
-        }){
-            Text("Add")
-        }
-
-    }
-}
-
-*/
-
-/*
-@Composable
-fun AlertDialogSample() {
-    MaterialTheme {
-        Column {
-            val openDialog = remember { mutableStateOf(false)  }
-
-            Button(onClick = {
-                openDialog.value = true
-            }) {
-                Text("Click me")
-            }
-
-            if (openDialog.value) {
-
-                AlertDialog(
-                    onDismissRequest = {
-                        // Dismiss the dialog when the user clicks outside the dialog or on the back
-                        // button. If you want to disable that functionality, simply use an empty
-                        // onCloseRequest.
-                        openDialog.value = false
-                    },
-                    title = {
-                        Text(text = "Dialog Title")
-                    },
-                    text = {
-                        Text("Here is a text ")
-                    },
-                    confirmButton = {
-                        Button(
-
-                            onClick = {
-                                openDialog.value = false
-                            }) {
-                            Text("This is the Confirm Button")
-                        }
-                    },
-                    dismissButton = {
-                        Button(
-
-                            onClick = {
-                                openDialog.value = false
-                            }) {
-                            Text("This is the dismiss Button")
-                        }
-                    }
-                )
-            }
-        }
-
-    }
-}
-
-
-var openLogoutDialog by remember { mutableStateOf(false) }
-if (openLogoutDialog) {
-    AlertDialog(
-        onDismissRequest = { openLogoutDialog = false },
-        title = { Text(text = "Are you sure?") },
-        text = { Text("Your local data will be cleared") },
-        buttons = {
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(all = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Button(
-                    onClick = { Firebase.auth.signOut() }
-                ) { Text("Yes") }
-                Button(
-                    onClick = { openLogoutDialog = false }
-                ) { Text("No") }
-            }
-        }
-    )
-}*/
