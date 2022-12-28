@@ -101,7 +101,7 @@ fun ShowNewNoteScreen(){
                             onClick = {
                                 newHeader = elementHeader
                                 textElementsValues.add(TextData(textElementsValues.size, elementHeader, ""))
-
+                                elementHeader = ""
                                 isDialogVisible = false
                             },
                             content = { Text("OK") },
@@ -141,7 +141,6 @@ fun ShowNewNoteScreen(){
                 )
             }
         }
-
          for (data in textElementsValues)
          {
              TextElement(textData = data)
