@@ -15,6 +15,7 @@ import androidx.compose.material.FabPosition
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
@@ -27,6 +28,7 @@ import androidx.lifecycle.ViewModel
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.lab.skuld.ui.screens.LoadingState
 import com.lab.skuld.ui.screens.ShowLoginScreen
 import com.lab.skuld.ui.screens.ShowNewNoteScreen
 import com.lab.skuld.ui.screens.ShowTasksScreen
@@ -95,7 +98,7 @@ sealed class Screen(val title: String, val content: @Composable () -> Unit, val 
     )
 }
 
-data class Navigator (
+data class Navigator(
     val push: (Screen) -> Unit,
     val pop: () -> Unit,
     val set: (Screen) -> Unit,
@@ -103,11 +106,18 @@ data class Navigator (
 
 class UiContextViewModel : ViewModel() {
     private var _nav: Navigator? = null
+    private var _loadingBar:  MutableState<Boolean>? = null
     val nav
         get() = _nav!!
 
+    var loadingBarEnabled by _loadingBar!!
+
     fun setNav(nav: Navigator) {
-        this._nav = nav
+        this._nav = _nav ?: nav
+    }
+
+    fun setLoadingBar(loadingBar: MutableState<Boolean>) {
+        this._loadingBar = _loadingBar ?: loadingBar
     }
 }
 
@@ -125,6 +135,8 @@ fun Navigation() {
         /* Default screen */
         Screen.Tasks()
     ) }
+
+    val loadingBar = remember { mutableStateOf(false) }
 
     /* Utility method in navigation */
     val navigateTo: (Screen) -> Unit = remember { { screen ->
@@ -150,6 +162,7 @@ fun Navigation() {
         pop = { currentMenuOption.onBack?.let { screen -> navigateTo(screen) } },
         set = { screen -> currentMenuOption = screen }
     ))
+    viewModel.setLoadingBar(loadingBar)
 
     /* Log out modal dialog */
     var openLogoutDialog by remember { mutableStateOf(false) }
@@ -211,6 +224,9 @@ fun Navigation() {
                     }
                 }
             )
+            if (loadingBar.value) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            }
         },
         floatingActionButtonPosition = FabPosition.End,
         floatingActionButton = {

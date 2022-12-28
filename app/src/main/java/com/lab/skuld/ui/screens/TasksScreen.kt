@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.firebase.ui.common.ChangeEventType
 import com.firebase.ui.firestore.CachingSnapshotParser
 import com.firebase.ui.firestore.ChangeEventListener
@@ -31,6 +32,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.lab.skuld.ui.UiContextViewModel
 import com.lab.skuld.ui.rememberLiveArray
 import kotlinx.coroutines.tasks.await
 
@@ -59,13 +61,21 @@ fun maybeToTask(maybe: MaybeTask) =
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ShowTasksScreen() {
+    val uiContextViewModel: UiContextViewModel = viewModel()
+    LaunchedEffect(Unit) {
+        uiContextViewModel.loadingBarEnabled = true
+    }
+
     val query = Firebase.firestore
         .collection("users/data/${Firebase.auth.currentUser!!.uid}")
 
     val documents: List<Task> = rememberLiveArray(
         MaybeTask::class.java,
         query,
-        ::maybeToTask
+        ::maybeToTask,
+        onDataChanged = {
+            uiContextViewModel.loadingBarEnabled = false
+        }
     )
 
     LazyColumn {
