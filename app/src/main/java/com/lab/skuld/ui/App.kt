@@ -86,6 +86,10 @@ sealed class Screen(val title: String, val content: @Composable () -> Unit, val 
         content = { ShowNewNoteScreen() },
         onBack = Tasks()
     )
+    /*class ExistingNote(title: String): Screen(
+        title = title
+
+    )*/
 }
 
 data class Navigator (

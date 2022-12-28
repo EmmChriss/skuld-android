@@ -1,5 +1,8 @@
 package com.lab.skuld.ui.screens
 
+
+
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,16 +27,42 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 @Composable
 fun ShowNewNoteScreen(){
+
     var newHeader by remember { mutableStateOf("") }
 
-    val textElements = remember { mutableStateListOf<String>() }
+    data class TextData(var index: Int, var header: String, var value: String)
+    val textElementsValues = remember { mutableStateListOf<TextData>() }
+
+
+
+    var stateIndex by rememberSaveable { mutableStateOf(0) }
 
     Column(modifier = Modifier.padding(16.dp)) {
+
+
         @Composable
         fun NewElementDialog() {
             var elementHeader by remember { mutableStateOf("") }
@@ -71,7 +100,8 @@ fun ShowNewNoteScreen(){
                         TextButton(
                             onClick = {
                                 newHeader = elementHeader
-                                textElements.add(elementHeader)
+                                textElementsValues.add(TextData(textElementsValues.size, elementHeader, ""))
+
                                 isDialogVisible = false
                             },
                             content = { Text("OK") },
@@ -83,12 +113,43 @@ fun ShowNewNoteScreen(){
                 )
             }
         }
-        for (value in textElements){
-            TextElement(value)
+        @Composable
+        fun TextElement(textData: TextData) {
+            val index = textData.index
+            val header = textData.header
+            val value = textData.value
+            if(index>-1) {
+                Text(header, modifier = Modifier.padding(5.dp), fontSize = 20.sp)
+                TextField(
+                    value = value,
+                    onValueChange = {
+                        textElementsValues[index] = textElementsValues[index].copy(value = it)
+                    },
+                    label = { Text("Content") }
+                )
+                TextButton(
+                    onClick = {
+                        textElementsValues[index] = textElementsValues[index].copy(index = -1)
+                    },
+                    content = {
+                        Text(
+                            "Delete element",
+                            modifier = Modifier.padding(2.dp),
+                            fontSize = 10.sp
+                        )
+                    },
+                )
+            }
         }
-        if(newHeader != ""){
-            TextElement(newHeader)
-        }
+
+         for (data in textElementsValues)
+         {
+             TextElement(textData = data)
+             Spacer(modifier = Modifier.padding(5.dp))
+         }
+
+
+
         NewElementDialog()
 
     }
@@ -133,16 +194,4 @@ fun MyAlertDialog(
 }
 
 
-
-@Composable
-fun TextElement(label: String = "New Element") {
-    var textInput by rememberSaveable { mutableStateOf("Text") }
-    TextField(
-        value = textInput,
-        onValueChange = {
-            textInput = it
-        },
-        label = { Text(label) }
-    )
-}
 
