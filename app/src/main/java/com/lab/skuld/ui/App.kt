@@ -43,6 +43,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import com.lab.skuld.ui.screens.LoadingState
+import com.lab.skuld.ui.screens.ShowCalendarScreen
 import com.lab.skuld.ui.screens.ShowLoginScreen
 import com.lab.skuld.ui.screens.ShowNewNoteScreen
 import com.lab.skuld.ui.screens.ShowTasksScreen
@@ -87,14 +88,21 @@ sealed class Screen(val title: String, val content: @Composable () -> Unit, val 
         content: @Composable () -> Unit,
         onBack: Screen?
     ) : Screen(title, content, onBack)
-    class Tasks : Screen(
-        title = "Tasks",
-        content = { ShowTasksScreen() }
-    )
+
     class NewTask : Screen(
         title = "New Task",
         content = { ShowNewNoteScreen() },
         onBack = Tasks()
+    )
+
+    class Tasks : Screen(
+        title = "Tasks",
+        content = { ShowTasksScreen() }
+    )
+
+    class Calendar : Screen(
+        title = "Calendar",
+        content = { ShowCalendarScreen() }
     )
 }
 
@@ -104,19 +112,26 @@ data class Navigator(
     val set: (Screen) -> Unit,
 )
 
+data class LoadingBar(
+    private val _enabled: MutableState<Boolean>
+) {
+    var enabled by _enabled
+}
+
 class UiContextViewModel : ViewModel() {
     private var _nav: Navigator? = null
-    private var _loadingBar:  MutableState<Boolean>? = null
+    private var _loadingBar:  LoadingBar? = null
     val nav
         get() = _nav!!
 
-    var loadingBarEnabled by _loadingBar!!
+    val loadingBar
+        get() = _loadingBar!!
 
     fun setNav(nav: Navigator) {
         this._nav = _nav ?: nav
     }
 
-    fun setLoadingBar(loadingBar: MutableState<Boolean>) {
+    fun setLoadingBar(loadingBar: LoadingBar) {
         this._loadingBar = _loadingBar ?: loadingBar
     }
 }
@@ -129,6 +144,7 @@ fun Navigation() {
     val menuOptions = remember { listOf(
         /* All screens */
         Screen.Tasks(),
+        Screen.Calendar(),
         Screen.NewTask()
     ) }
     var currentMenuOption: Screen by remember { mutableStateOf(
@@ -162,7 +178,9 @@ fun Navigation() {
         pop = { currentMenuOption.onBack?.let { screen -> navigateTo(screen) } },
         set = { screen -> currentMenuOption = screen }
     ))
-    viewModel.setLoadingBar(loadingBar)
+    viewModel.setLoadingBar(LoadingBar(
+        _enabled = loadingBar
+    ))
 
     /* Log out modal dialog */
     var openLogoutDialog by remember { mutableStateOf(false) }

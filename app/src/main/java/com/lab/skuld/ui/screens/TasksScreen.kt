@@ -63,7 +63,7 @@ fun maybeToTask(maybe: MaybeTask) =
 fun ShowTasksScreen() {
     val uiContextViewModel: UiContextViewModel = viewModel()
     LaunchedEffect(Unit) {
-        uiContextViewModel.loadingBarEnabled = true
+        uiContextViewModel.loadingBar.enabled = true
     }
 
     val query = Firebase.firestore
@@ -74,7 +74,7 @@ fun ShowTasksScreen() {
         query,
         ::maybeToTask,
         onDataChanged = {
-            uiContextViewModel.loadingBarEnabled = false
+            uiContextViewModel.loadingBar.enabled = false
         }
     )
 
