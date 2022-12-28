@@ -73,7 +73,7 @@ fun Auth(content: @Composable () -> Unit) {
     } else {
         content()
     }
-    
+
 }
 
 sealed class Screen(val title: String, val content: @Composable () -> Unit, val onBack: Screen? = null ) {
