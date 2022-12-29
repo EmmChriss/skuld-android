@@ -22,7 +22,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,17 +47,20 @@ import androidx.compose.ui.window.Dialog
 
 
 
+data class TextData(var index: Int, var header: String, var value: String)
 @Composable
-fun ShowNewNoteScreen(){
+fun ShowNewNoteScreen(NoteData: List<TextData> = listOf()){
 
     var newHeader by remember { mutableStateOf("") }
-
-    data class TextData(var index: Int, var header: String, var value: String)
     val textElementsValues = remember { mutableStateListOf<TextData>() }
 
+    if(NoteData.isNotEmpty()) {
+        for(element in NoteData){
+            textElementsValues.add(element)
+        }
+    }
 
 
-    var stateIndex by rememberSaveable { mutableStateOf(0) }
 
     Column(modifier = Modifier.padding(16.dp)) {
 

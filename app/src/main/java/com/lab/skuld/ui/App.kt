@@ -41,6 +41,7 @@ import com.google.firebase.ktx.Firebase
 import com.lab.skuld.ui.screens.ShowLoginScreen
 import com.lab.skuld.ui.screens.ShowNewNoteScreen
 import com.lab.skuld.ui.screens.ShowTasksScreen
+import com.lab.skuld.ui.screens.TextData
 import com.lab.skuld.ui.theme.SkuldFrontendTheme
 import kotlinx.coroutines.launch
 
@@ -76,20 +77,17 @@ fun Auth(content: @Composable () -> Unit) {
 
 }
 
-sealed class Screen(val title: String, val content: @Composable () -> Unit, val onBack: Screen? = null ) {
+sealed class Screen(val title: String, val content: @Composable (navigator: Navigator) -> Unit, val onBack: Screen? = null ) {
     class Tasks() : Screen(
         title = "Tasks",
-        content = { ShowTasksScreen() }
+        content = { navigator -> ShowTasksScreen(navigator) }
     )
-    class NewTask() : Screen(
+    class NewTask(dataList: List<TextData> = listOf()) : Screen(
         title = "New Task",
-        content = { ShowNewNoteScreen() },
+        content = { ShowNewNoteScreen(dataList) },
         onBack = Tasks()
     )
-    /*class ExistingNote(title: String): Screen(
-        title = title
 
-    )*/
 }
 
 data class Navigator (
@@ -102,6 +100,7 @@ data class Navigator (
 fun Navigation() {
     val scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
+
 
     val menuOptions = remember { listOf(
         /* All screens */
@@ -147,6 +146,18 @@ fun Navigation() {
             }
         )
     }
+    val navigator = Navigator(
+        push = { screen ->
+            // Push a new screen onto the stack
+            currentMenuOption = screen
+        },
+        pop = {
+            // Pop the current screen off the stack
+            currentMenuOption = currentMenuOption.onBack!!
+        }
+    )
+
+    currentMenuOption.content(navigator)
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -187,7 +198,9 @@ fun Navigation() {
         floatingActionButton = {
             FloatingActionButton(
                 content = { Icon(Icons.Filled.Add, contentDescription = "Localized description") },
-                onClick = { currentMenuOption = Screen.NewTask() }
+                onClick = {
+                    currentMenuOption = Screen.NewTask()
+                }
             )
         },
         content = {
@@ -196,7 +209,7 @@ fun Navigation() {
                     .padding(it)
                     .fillMaxSize()
             ) {
-                currentMenuOption.content()
+                currentMenuOption.content(navigator)
             }
         }
     )
@@ -209,6 +222,7 @@ fun Navigation() {
     } else if (currentMenuOption.onBack != null) {
         BackHandler { navigateTo(currentMenuOption.onBack!!) }
     }
+
 }
 
 @Composable
