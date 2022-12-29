@@ -26,7 +26,7 @@ import com.lab.skuld.ui.Screen
 
 //data class TextData(var index: Int, var header: String, var value: String)
 
-data class Document(var header: String= "Title", var image: Painter, var  mapDocumentContents: Map<String, *>)
+data class Document(var header: String= "Title", var image: Painter? = null, var  documentContents: List<TextData> = listOf())
 
 
 
@@ -35,18 +35,18 @@ data class Document(var header: String= "Title", var image: Painter, var  mapDoc
 fun ShowTasksScreen(navigator: Navigator) {
 
     ///////////
-    val exampleDoc = listOf(
-    TextData(0,"a", "aa"), TextData(1,"b", "bb"), TextData(3,"c", "cc")
-
+    val exampleDoc = Document("DocTitle", documentContents = listOf(
+    TextData(0,"a", "aa"), TextData(1,"b", "bb"), TextData(3,"c", "cc"))
     )
 
 
     @Composable
     fun DocumentPreview(document: Document) {
-        fun findFirstString(mapDocumentContents: Map<String, *>): String{
-            val filteredMap = mapDocumentContents.filter { (key, value) ->  value is String}
-            if (filteredMap.isNotEmpty()) {
-                return filteredMap.iterator().next().value as String
+        fun findFirstString(mapDocumentContents: List<TextData>): String{
+            for (element in document.documentContents){
+                if(element.value is String){
+                    return element.value
+                }
             }
             return ""
         }
@@ -64,15 +64,17 @@ fun ShowTasksScreen(navigator: Navigator) {
                 if (document.image != null) {
                     document.image = painterResource(id = R.drawable.ic_launcher_background)
                 }
-                Image(
-                    document.image,
-                    contentDescription = "DocImage",
-                    modifier = Modifier.clip(RoundedCornerShape(percent = 10))
-                )
+                document.image?.let {
+                    Image(
+                        it,
+                        contentDescription = "DocImage",
+                        modifier = Modifier.clip(RoundedCornerShape(percent = 10))
+                    )
+                }
                 Spacer(modifier = Modifier.width(15.dp))
                 Column {
                     Text(document.header)
-                    Text(findFirstString(document.mapDocumentContents))
+                    Text(findFirstString(document.documentContents))
                 }
             }
         }
@@ -84,9 +86,10 @@ fun ShowTasksScreen(navigator: Navigator) {
         DocumentPreview(
             document = Document(header = "Example header",
                 image = painterResource(id = R.drawable.ic_launcher_background),
-                mapDocumentContents = mutableMapOf("one" to 1, "two" to 2, "three" to 3, "four" to "Subheader - First string value in map", "five" to 5))
+                documentContents = mutableListOf(TextData(0,"a", "aa"), TextData(1,"b", "bb"), TextData(3,"c", "cc")))
         )
     }
+
 
 
 

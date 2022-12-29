@@ -38,10 +38,10 @@ import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.lab.skuld.ui.screens.Document
 import com.lab.skuld.ui.screens.ShowLoginScreen
 import com.lab.skuld.ui.screens.ShowNewNoteScreen
 import com.lab.skuld.ui.screens.ShowTasksScreen
-import com.lab.skuld.ui.screens.TextData
 import com.lab.skuld.ui.theme.SkuldFrontendTheme
 import kotlinx.coroutines.launch
 
@@ -82,9 +82,9 @@ sealed class Screen(val title: String, val content: @Composable (navigator: Navi
         title = "Tasks",
         content = { navigator -> ShowTasksScreen(navigator) }
     )
-    class NewTask(dataList: List<TextData> = listOf()) : Screen(
+    class NewTask(document: Document) : Screen(
         title = "New Task",
-        content = { ShowNewNoteScreen(dataList) },
+        content = { ShowNewNoteScreen(document) },
         onBack = Tasks()
     )
 
@@ -105,7 +105,7 @@ fun Navigation() {
     val menuOptions = remember { listOf(
         /* All screens */
         Screen.Tasks(),
-        Screen.NewTask()
+        Screen.NewTask(document = Document("", null, documentContents = listOf()))
     ) }
     var currentMenuOption: Screen by remember { mutableStateOf(
         /* Default screen */
@@ -199,7 +199,7 @@ fun Navigation() {
             FloatingActionButton(
                 content = { Icon(Icons.Filled.Add, contentDescription = "Localized description") },
                 onClick = {
-                    currentMenuOption = Screen.NewTask()
+                    currentMenuOption = Screen.NewTask(document = Document("", null, documentContents = listOf()))
                 }
             )
         },

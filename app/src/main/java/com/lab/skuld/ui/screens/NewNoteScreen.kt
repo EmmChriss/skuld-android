@@ -33,29 +33,15 @@ import androidx.compose.ui.window.Dialog
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 data class TextData(var index: Int, var header: String, var value: String)
 @Composable
-fun ShowNewNoteScreen(NoteData: List<TextData> = listOf()){
+fun ShowNewNoteScreen(document: Document){
 
     var newHeader by remember { mutableStateOf("") }
     val textElementsValues = remember { mutableStateListOf<TextData>() }
 
-    if(NoteData.isNotEmpty()) {
-        for(element in NoteData){
+    if(document.documentContents.isNotEmpty()) {
+        for(element in document.documentContents){
             textElementsValues.add(element)
         }
     }
