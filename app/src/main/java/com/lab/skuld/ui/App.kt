@@ -41,6 +41,7 @@ import com.google.firebase.ktx.Firebase
 import com.lab.skuld.ui.screens.Document
 import com.lab.skuld.ui.screens.ShowLoginScreen
 import com.lab.skuld.ui.screens.ShowNewNoteScreen
+import com.lab.skuld.ui.screens.ShowNoteScreen
 import com.lab.skuld.ui.screens.ShowTasksScreen
 import com.lab.skuld.ui.theme.SkuldFrontendTheme
 import kotlinx.coroutines.launch
@@ -84,8 +85,13 @@ sealed class Screen(val title: String, val content: @Composable (navigator: Navi
     )
     class NewTask(document: Document) : Screen(
         title = "New Task",
-        content = { ShowNewNoteScreen(document) },
+        content = { navigator -> ShowNewNoteScreen(navigator, document) },
         onBack = Tasks()
+    )
+
+    class Task(document: Document) : Screen(
+        title = "Task",
+        content = { navigator -> ShowNoteScreen(navigator, document) }
     )
 
 }

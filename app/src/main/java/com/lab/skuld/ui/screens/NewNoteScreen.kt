@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
@@ -28,27 +30,34 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-
-
-
-
+import com.lab.skuld.ui.Navigator
+import com.lab.skuld.ui.Screen
 
 data class TextData(var index: Int, var header: String, var value: String)
 @Composable
-fun ShowNewNoteScreen(document: Document){
+fun ShowNewNoteScreen(navigator: Navigator, document: Document){
 
     var newHeader by remember { mutableStateOf("") }
+    var documentTitle by remember { mutableStateOf("") }
     val textElementsValues = remember { mutableStateListOf<TextData>() }
 
-    if(document.documentContents.isNotEmpty()) {
+    val preList = mutableListOf<TextData>()
+    if(document.documentContents.isNotEmpty() and textElementsValues.isEmpty()) {
+
         for(element in document.documentContents){
-            textElementsValues.add(element)
+            preList.add(element)
         }
+        textElementsValues += preList
     }
 
 
 
-    Column(modifier = Modifier.padding(16.dp)) {
+
+
+    Column(modifier = Modifier
+        .padding(16.dp)
+        .verticalScroll(rememberScrollState())
+        .fillMaxWidth()) {
 
 
         @Composable
@@ -129,7 +138,23 @@ fun ShowNewNoteScreen(document: Document){
                 )
             }
         }
-         for (data in textElementsValues)
+
+
+
+
+        TextField(
+            value = documentTitle,
+            onValueChange = {
+                documentTitle = it
+            },
+            label = { Text("Title") },
+            modifier = Modifier
+                .padding(10.dp)
+                .align(Alignment.CenterHorizontally)
+        )
+        Spacer(modifier = Modifier.padding(10.dp))
+
+        for (data in textElementsValues)
          {
              TextElement(textData = data)
              Spacer(modifier = Modifier.padding(5.dp))
@@ -139,6 +164,14 @@ fun ShowNewNoteScreen(document: Document){
 
         NewElementDialog()
 
+
+
+        Button(onClick = {
+            // Navigate to a different screen when the button is clicked
+            navigator.push(Screen.Task(document))
+        }) {
+            Text("Save")
+        }
     }
 }
 

@@ -34,7 +34,7 @@ data class Document(var header: String= "Title", var image: Painter? = null, var
 @Composable
 fun ShowTasksScreen(navigator: Navigator) {
 
-    ///////////
+
     val exampleDoc = Document("DocTitle", documentContents = listOf(
     TextData(0,"a", "aa"), TextData(1,"b", "bb"), TextData(3,"c", "cc"))
     )
@@ -99,6 +99,7 @@ fun ShowTasksScreen(navigator: Navigator) {
 
         items(count = 20) {
             ExamplePreview()
+
 
         }
     }
