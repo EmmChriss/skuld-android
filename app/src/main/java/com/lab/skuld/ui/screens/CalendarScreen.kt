@@ -83,27 +83,28 @@ fun ShowCalendarScreen() {
         }
         KalendarEvent(date, doc.title, doc.contents)
     }
-    var currentDay: Date by remember { mutableStateOf(Date.from(Instant.now())) }
+    var currentDay: Date by remember { mutableStateOf(Date()) }
 
     ShowExpandableCalendar(
         events = events,
         onDateSelected = { day, _ ->
-            currentDay = Date(day.localDate.year, day.localDate.monthNumber, day.localDate.dayOfMonth)
-        },
+            currentDay = Date(day.localDate.year - 1900, day.localDate.monthNumber - 1, day.localDate.dayOfMonth)
+         },
     ) {
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
         ) {
             documents.filter { doc ->
-                val start = doc.startDate?.let { listOf(it.year, it.month, it.day) }
-                val end = doc.endDate?.let { listOf(it.year, it.month, it.day) }
-                val current = listOf(currentDay.year, currentDay.month, currentDay)
-                if (doc.startDate != null && !currentDay.after(doc.startDate))
-                    false
-                else if (doc.startDate != null && !currentDay.after(doc.startDate))
-                    false
-                else true
+                val c = currentDay
+                val s = doc.startDate
+                val e = doc.endDate
+                Log.i("current <> start", currentDay.toString() + "   <>   " + s.toString())
+                when {
+                    s != null && (c.year < s.year || c.month < s.month || c.day < s.day) -> false
+                    e != null && (c.year > e.year || c.month > e.month || c.day > e.day) -> false
+                    else -> true
+                }
             }.forEach {
                 ShowEvent(it)
             }
