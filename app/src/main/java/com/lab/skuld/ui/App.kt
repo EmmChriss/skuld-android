@@ -103,10 +103,10 @@ sealed class Screen(val title: String, val content: @Composable () -> Unit, val 
         title = "Calendar",
         content = { ShowCalendarScreen() }
     )
-    class ExistingNote(title: String): Screen(
-        title = title
-
-    )
+    // class ExistingNote(title: String): Screen(
+    //     title = title
+    //     content
+    // )
 }
 
 data class Navigator(
