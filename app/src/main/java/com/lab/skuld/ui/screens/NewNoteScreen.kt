@@ -27,15 +27,41 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.lab.skuld.ui.Navigator
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.lab.skuld.ui.Event
 import com.lab.skuld.ui.Screen
+import com.lab.skuld.ui.UiContextViewModel
+import java.util.Date
+
+fun eventToDocument(event: Event): Document {
+    val lines = event.contents?.split("\n") ?: emptyList()
+    val documentContents = lines.mapIndexed { index, line ->
+        val parts = line.split(" ", limit = 2)
+        val header = parts.getOrNull(0) ?: ""
+        val value = parts.getOrNull(1) ?: ""
+        TextData(index, header, value)
+    }
+    return Document(header = event.title, documentContents = documentContents)
+}
+
+fun documentToEvent(document: Document): Event {
+    val contents = document.documentContents.joinToString("\n") { data -> "${data.header} ${data.value}" }
+    return Event(id = "", startDate = null, endDate = null, title = document.header, checked = null, contents = contents)
+}
+val event = Event(id = "123", startDate = Date(), endDate = null, title = "My Event", checked = null, contents = "Line 1\nLine 2\nLine 3")
+
 
 data class TextData(var index: Int, var header: String, var value: String)
+data class Document(var header: String= "Title", var image: Painter? = null, var  documentContents: List<TextData> = listOf())
 @Composable
-fun ShowNewNoteScreen(navigator: Navigator, document: Document){
+fun ShowNewNoteScreen(documentt: Event = event){
+    var documentt = Event(id = "123", startDate = Date(), endDate = null, title = "My Event", checked = null, contents = "Line 1\nLine 2\nLine 3")
+    var document = eventToDocument(documentt)
+    val viewModel: UiContextViewModel = viewModel()
 
     var newHeader by remember { mutableStateOf("") }
     var documentTitle by remember { mutableStateOf("") }
@@ -166,12 +192,20 @@ fun ShowNewNoteScreen(navigator: Navigator, document: Document){
 
 
 
-        Button(onClick = {
+        /*Button(onClick = {
             // Navigate to a different screen when the button is clicked
             navigator.push(Screen.Task(document))
         }) {
             Text("Save")
+        }*/
+        Button(onClick = {
+            // Navigate to a different screen when the button is clicked
+            viewModel.nav.push(Screen.TaskP(documentToEvent(document)))
+        }) {
+            Text("Save")
         }
+
+
     }
 }
 

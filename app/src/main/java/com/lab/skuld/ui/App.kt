@@ -23,8 +23,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.ViewModel
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -39,16 +37,56 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.DocumentId
 import com.google.firebase.ktx.Firebase
-import com.lab.skuld.ui.screens.LoadingState
 import com.lab.skuld.ui.screens.ShowCalendarScreen
 import com.lab.skuld.ui.screens.ShowLoginScreen
 import com.lab.skuld.ui.screens.ShowNewNoteScreen
+import com.lab.skuld.ui.screens.ShowNoteScreen
 import com.lab.skuld.ui.screens.ShowTasksScreen
 import com.lab.skuld.ui.theme.SkuldFrontendTheme
 import kotlinx.coroutines.launch
+import java.util.Date
+
+class MaybeEvent {
+    @DocumentId
+    val id = ""
+    val startDate: Timestamp? = null
+    val endDate: Timestamp? = null
+    val title: String? = null
+    val checked: Boolean? = null
+    val contents: String? = null
+}
+
+data class Event(
+    val id: String,
+    val startDate: Date?,
+    val endDate: Date?,
+    val title: String,
+    val checked: Boolean?,
+    val contents: String?,
+)
+
+fun maybeToEvent(maybe: MaybeEvent): Event? {
+    if ((maybe.startDate == null && maybe.endDate == null) || maybe.title == null)
+        return null
+
+    return Event(
+        maybe.id,
+        maybe.startDate?.toDate(),
+        maybe.endDate?.toDate(),
+        maybe.title,
+        maybe.checked,
+        maybe.contents
+    )
+}
+
+
 
 // Main Composable entry-point
 @Composable
@@ -59,6 +97,8 @@ fun App() {
         }
     }
 }
+
+
 
 
 @Composable
@@ -81,17 +121,24 @@ fun Auth(content: @Composable () -> Unit) {
     }
 
 }
-
+val emptyEvent = Event(id = "", startDate = Date(), endDate = null, title = "", checked = null, contents = null)
 sealed class Screen(val title: String, val content: @Composable () -> Unit, val onBack: Screen? = null ) {
+
+
     class Custom(
         title: String,
         content: @Composable () -> Unit,
         onBack: Screen?
     ) : Screen(title, content, onBack)
 
-    class NewTask : Screen(
+    class NewTask(event: Event) : Screen(
         title = "New Task",
-        content = { ShowNewNoteScreen() },
+        content = { ShowNewNoteScreen(event)},
+        onBack = Tasks()
+    )
+    class TaskP(event: Event) : Screen(
+        title = "Task",
+        content = { ShowNoteScreen(event)},
         onBack = Tasks()
     )
     class Tasks : Screen(
@@ -148,7 +195,7 @@ fun Navigation() {
         /* All screens */
         Screen.Tasks(),
         Screen.Calendar(),
-        Screen.NewTask()
+        Screen.NewTask(emptyEvent)
     ) }
     var currentMenuOption: Screen by remember { mutableStateOf(
         /* Default screen */
@@ -253,7 +300,7 @@ fun Navigation() {
         floatingActionButton = {
             FloatingActionButton(
                 content = { Icon(Icons.Filled.Add, contentDescription = "Localized description") },
-                onClick = { currentMenuOption = Screen.NewTask() }
+                onClick = { currentMenuOption = Screen.NewTask(emptyEvent) }
             )
         },
         content = {

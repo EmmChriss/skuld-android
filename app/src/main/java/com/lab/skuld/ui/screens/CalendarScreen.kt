@@ -1,20 +1,11 @@
 package com.lab.skuld.ui.screens
 
+
+
 import android.util.Log
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.DocumentId
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
-import com.google.type.DateTime
-import com.himanshoe.kalendar.Kalendar
-import com.himanshoe.kalendar.model.KalendarType
-import com.lab.skuld.ui.rememberLiveArray
-import androidx.compose.material.*
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -22,50 +13,28 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.*
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.google.firebase.Timestamp
+import androidx.compose.ui.tooling.preview.Preview
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import com.himanshoe.kalendar.Kalendar
 import com.himanshoe.kalendar.model.KalendarDay
 import com.himanshoe.kalendar.model.KalendarEvent
+import com.himanshoe.kalendar.model.KalendarType
+import com.lab.skuld.ui.Event
+import com.lab.skuld.ui.MaybeEvent
+import com.lab.skuld.ui.maybeToEvent
+import com.lab.skuld.ui.rememberLiveArray
 import kotlinx.datetime.LocalDate
-import java.time.Instant
 import java.util.Date
 
-class MaybeEvent {
-    @DocumentId
-    val id = ""
-    val startDate: Timestamp? = null
-    val endDate: Timestamp? = null
-    val title: String? = null
-    val checked: Boolean? = null
-    val contents: String? = null
-}
-
-data class Event(
-    val id: String,
-    val startDate: Date?,
-    val endDate: Date?,
-    val title: String,
-    val checked: Boolean?,
-    val contents: String?,
-)
-
-fun maybeToEvent(maybe: MaybeEvent): Event? {
-    if ((maybe.startDate == null && maybe.endDate == null) || maybe.title == null)
-        return null
-
-    return Event(
-        maybe.id,
-        maybe.startDate?.toDate(),
-        maybe.endDate?.toDate(),
-        maybe.title,
-        maybe.checked,
-        maybe.contents
-    )
-}
 
 @Composable
 fun ShowCalendarScreen() {

@@ -15,11 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.lab.skuld.ui.Navigator
+import com.lab.skuld.ui.Event
 
 //data class TextData(var index: Int, var header: String, var value: String)
 @Composable
-fun ShowNoteScreen(navigator: Navigator, document: Document) {
+fun ShowNoteScreen(documentt: Event) {
+    var document = eventToDocument(documentt)
     val textElementsValues = remember { mutableStateListOf<TextData>() }
 
     if (document.documentContents.isNotEmpty()) {
@@ -36,6 +37,7 @@ fun ShowNoteScreen(navigator: Navigator, document: Document) {
 
 
     }
+
 
 
 
