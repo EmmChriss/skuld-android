@@ -6,10 +6,15 @@ package com.lab.skuld.ui.screens
 import com.firebase.ui.firestore.CachingSnapshotParser
 import com.firebase.ui.firestore.ChangeEventListener
 import com.firebase.ui.firestore.ClassSnapshotParser*/
+//import com.lab.skuld.ui.maybeToEvent
+
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -21,8 +26,44 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.lab.skuld.ui.Screen
 import com.lab.skuld.ui.UiContextViewModel
 import com.lab.skuld.ui.rememberLiveArray
+
+/*
+class MaybeTask {
+    //@DocumentId
+    val id = ""
+    val startDate: Timestamp? = null
+    val endDate: Timestamp? = null
+    val title: String? = null
+    val checked: Boolean? = null
+    val contents: String? = null
+}
+
+data class Task(
+    val id: String,
+    val startDate: Date? = null,
+    val endDate: Date? = null,
+    val title: String,
+    val checked: Boolean?,
+    val contents: String?,
+)
+
+fun maybeToTask(maybe: MaybeTask) =
+    maybe.title?.let { title ->
+        maybe.checked?.let { checked ->
+            Task(maybe.id, title = title, checked = checked, contents = maybe.contents)
+        }
+    }
+
+
+*/
+
+fun TaskToEvent(task: Task): Event{
+    var event = Event(id = task.id, title = task.title, checked = task.checked, contents = task.contents, endDate = null, startDate = null)
+    return event
+}
 
 class MaybeTask {
     @DocumentId
@@ -74,11 +115,13 @@ fun ShowTasksScreen() {
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(100.dp)
                     .animateItemPlacement()
+                    .clickable { uiContextViewModel.nav.push(Screen.TaskP(TaskToEvent(documents[it]))) }
             )
             {
                 Text(documents[it].title)
+                Spacer(modifier = Modifier.padding(20.dp))
                 if (documents[it].contents != null) {
                     Text(documents[it].contents.toString())
                 }

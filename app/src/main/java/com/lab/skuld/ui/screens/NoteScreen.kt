@@ -15,7 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.lab.skuld.ui.Event
+//import com.lab.skuld.ui.Event
 
 //data class TextData(var index: Int, var header: String, var value: String)
 @Composable

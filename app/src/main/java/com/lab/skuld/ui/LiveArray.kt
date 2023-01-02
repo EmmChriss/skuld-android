@@ -25,9 +25,9 @@ fun <T, F> rememberLiveArray(
         snapshot: DocumentSnapshot,
         newIndex: Int,
         oldIndex: Int) -> Unit
-        = { _, _, _, _ -> },
+    = { _, _, _, _ -> },
     onError : (FirebaseFirestoreException) -> Unit
-        = { _ -> }
+    = { _ -> }
 ) : List<F> {
     var documents : List<F> by remember { mutableStateOf(listOf()) }
     fun updateDocuments(iter: Iterable<T>) {

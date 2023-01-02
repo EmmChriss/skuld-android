@@ -39,11 +39,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.DocumentId
 import com.google.firebase.ktx.Firebase
+import com.lab.skuld.ui.screens.Event
 import com.lab.skuld.ui.screens.ShowCalendarScreen
 import com.lab.skuld.ui.screens.ShowLoginScreen
 import com.lab.skuld.ui.screens.ShowNewNoteScreen
@@ -53,38 +52,7 @@ import com.lab.skuld.ui.theme.SkuldFrontendTheme
 import kotlinx.coroutines.launch
 import java.util.Date
 
-class MaybeEvent {
-    @DocumentId
-    val id = ""
-    val startDate: Timestamp? = null
-    val endDate: Timestamp? = null
-    val title: String? = null
-    val checked: Boolean? = null
-    val contents: String? = null
-}
 
-data class Event(
-    val id: String,
-    val startDate: Date?,
-    val endDate: Date?,
-    val title: String,
-    val checked: Boolean?,
-    val contents: String?,
-)
-
-fun maybeToEvent(maybe: MaybeEvent): Event? {
-    if ((maybe.startDate == null && maybe.endDate == null) || maybe.title == null)
-        return null
-
-    return Event(
-        maybe.id,
-        maybe.startDate?.toDate(),
-        maybe.endDate?.toDate(),
-        maybe.title,
-        maybe.checked,
-        maybe.contents
-    )
-}
 
 
 
@@ -117,6 +85,7 @@ fun Auth(content: @Composable () -> Unit) {
     if (!loggedIn) {
         ShowLoginScreen()
     } else {
+        //Firebase.auth.signOut()
         content()
     }
 
