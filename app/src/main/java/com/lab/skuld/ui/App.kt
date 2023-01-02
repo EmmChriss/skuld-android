@@ -15,6 +15,7 @@ import androidx.compose.material.FabPosition
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
@@ -22,9 +23,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.ViewModel
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,10 +42,10 @@ import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import com.lab.skuld.ui.screens.Document
+import com.lab.skuld.ui.screens.LoadingState
+import com.lab.skuld.ui.screens.ShowCalendarScreen
 import com.lab.skuld.ui.screens.ShowLoginScreen
 import com.lab.skuld.ui.screens.ShowNewNoteScreen
-import com.lab.skuld.ui.screens.ShowNoteScreen
 import com.lab.skuld.ui.screens.ShowTasksScreen
 import com.lab.skuld.ui.theme.SkuldFrontendTheme
 import kotlinx.coroutines.launch
@@ -70,7 +74,7 @@ fun Auth(content: @Composable () -> Unit) {
         }
     }
 
-    if (false) {
+    if (!loggedIn) {
         ShowLoginScreen()
     } else {
         content()
@@ -78,45 +82,80 @@ fun Auth(content: @Composable () -> Unit) {
 
 }
 
-sealed class Screen(val title: String, val content: @Composable (navigator: Navigator) -> Unit, val onBack: Screen? = null ) {
-    class Tasks() : Screen(
-        title = "Tasks",
-        content = { navigator -> ShowTasksScreen(navigator) }
-    )
-    class NewTask(document: Document) : Screen(
+sealed class Screen(val title: String, val content: @Composable () -> Unit, val onBack: Screen? = null ) {
+    class Custom(
+        title: String,
+        content: @Composable () -> Unit,
+        onBack: Screen?
+    ) : Screen(title, content, onBack)
+
+    class NewTask : Screen(
         title = "New Task",
-        content = { navigator -> ShowNewNoteScreen(navigator, document) },
+        content = { ShowNewNoteScreen() },
         onBack = Tasks()
     )
-
-    class Task(document: Document) : Screen(
-        title = "Task",
-        content = { navigator -> ShowNoteScreen(navigator, document) }
+    class Tasks : Screen(
+        title = "Tasks",
+        content = { ShowTasksScreen() }
     )
 
+    class Calendar : Screen(
+        title = "Calendar",
+        content = { ShowCalendarScreen() }
+    )
+    // class ExistingNote(title: String): Screen(
+    //     title = title
+    //     content
+    // )
 }
 
-data class Navigator (
+data class Navigator(
     val push: (Screen) -> Unit,
-    val pop: () -> Unit
+    val pop: () -> Unit,
+    val set: (Screen) -> Unit,
 )
 
+data class LoadingBar(
+    private val _enabled: MutableState<Boolean>
+) {
+    var enabled by _enabled
+}
+
+class UiContextViewModel : ViewModel() {
+    private var _nav: Navigator? = null
+    private var _loadingBar:  LoadingBar? = null
+    val nav
+        get() = _nav!!
+
+    val loadingBar
+        get() = _loadingBar!!
+
+    fun setNav(nav: Navigator) {
+        this._nav = _nav ?: nav
+    }
+
+    fun setLoadingBar(loadingBar: LoadingBar) {
+        this._loadingBar = _loadingBar ?: loadingBar
+    }
+}
 
 @Composable
 fun Navigation() {
     val scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
 
-
     val menuOptions = remember { listOf(
         /* All screens */
         Screen.Tasks(),
-        Screen.NewTask(document = Document("", null, documentContents = listOf()))
+        Screen.Calendar(),
+        Screen.NewTask()
     ) }
     var currentMenuOption: Screen by remember { mutableStateOf(
         /* Default screen */
         Screen.Tasks()
     ) }
+
+    val loadingBar = remember { mutableStateOf(false) }
 
     /* Utility method in navigation */
     val navigateTo: (Screen) -> Unit = remember { { screen ->
@@ -126,6 +165,25 @@ fun Navigation() {
         if (scaffoldState.drawerState.isOpen)
             scope.launch { scaffoldState.drawerState.close() }
     } }
+
+    /* Create ViewModel containing navigation callbacks */
+    val viewModel : UiContextViewModel = viewModel()
+    viewModel.setNav(Navigator(
+        push = { screen ->
+            navigateTo(
+                Screen.Custom(
+                    title = screen.title,
+                    content = screen.content,
+                    onBack = currentMenuOption
+                )
+            )
+        },
+        pop = { currentMenuOption.onBack?.let { screen -> navigateTo(screen) } },
+        set = { screen -> currentMenuOption = screen }
+    ))
+    viewModel.setLoadingBar(LoadingBar(
+        _enabled = loadingBar
+    ))
 
     /* Log out modal dialog */
     var openLogoutDialog by remember { mutableStateOf(false) }
@@ -152,18 +210,6 @@ fun Navigation() {
             }
         )
     }
-    val navigator = Navigator(
-        push = { screen ->
-            // Push a new screen onto the stack
-            currentMenuOption = screen
-        },
-        pop = {
-            // Pop the current screen off the stack
-            currentMenuOption = currentMenuOption.onBack!!
-        }
-    )
-
-    currentMenuOption.content(navigator)
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -199,14 +245,15 @@ fun Navigation() {
                     }
                 }
             )
+            if (loadingBar.value) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            }
         },
         floatingActionButtonPosition = FabPosition.End,
         floatingActionButton = {
             FloatingActionButton(
                 content = { Icon(Icons.Filled.Add, contentDescription = "Localized description") },
-                onClick = {
-                    currentMenuOption = Screen.NewTask(document = Document("", null, documentContents = listOf()))
-                }
+                onClick = { currentMenuOption = Screen.NewTask() }
             )
         },
         content = {
@@ -215,7 +262,7 @@ fun Navigation() {
                     .padding(it)
                     .fillMaxSize()
             ) {
-                currentMenuOption.content(navigator)
+                currentMenuOption.content()
             }
         }
     )
@@ -228,20 +275,10 @@ fun Navigation() {
     } else if (currentMenuOption.onBack != null) {
         BackHandler { navigateTo(currentMenuOption.onBack!!) }
     }
-
 }
 
 @Composable
-fun Menu() {
-
+fun MenuOption(title: String, onClick: () -> Unit) {
+    Button(onClick = onClick, Modifier.fillMaxWidth(0.7f)) { Text(title) }
 }
 
-@Composable
-fun MenuOption(text: String, onClick: () -> Unit) {
-    Button(onClick = onClick, Modifier.fillMaxWidth(0.7f)) { Text(text) }
-}
-
-@Composable
-fun AppBar() {
-
-}

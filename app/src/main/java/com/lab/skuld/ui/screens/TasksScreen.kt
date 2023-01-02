@@ -1,112 +1,100 @@
 package com.lab.skuld.ui.screens
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
+import android.util.Log
+import androidx.compose.foundation.ExperimentalFoundationApi
+import com.firebase.ui.firestore.FirestoreArray
+
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.lab.skuld.R
-import com.lab.skuld.ui.Navigator
-import com.lab.skuld.ui.Screen
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.firebase.ui.common.ChangeEventType
+import com.firebase.ui.firestore.CachingSnapshotParser
+import com.firebase.ui.firestore.ChangeEventListener
+import com.firebase.ui.firestore.ClassSnapshotParser
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.DocumentChange
+import com.google.firebase.firestore.DocumentId
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FirebaseFirestoreException
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import com.lab.skuld.ui.UiContextViewModel
+import com.lab.skuld.ui.rememberLiveArray
+import kotlinx.coroutines.tasks.await
 
-//data class TextData(var index: Int, var header: String, var value: String)
-
-data class Document(var header: String= "Title", var image: Painter? = null, var  documentContents: List<TextData> = listOf())
-
-
-
-
-@Composable
-fun ShowTasksScreen(navigator: Navigator) {
-
-
-    val exampleDoc = Document("DocTitle", documentContents = listOf(
-    TextData(0,"a", "aa"), TextData(1,"b", "bb"), TextData(3,"c", "cc"))
-    )
-
-
-    @Composable
-    fun DocumentPreview(document: Document) {
-        fun findFirstString(mapDocumentContents: List<TextData>): String{
-            for (element in document.documentContents){
-                if(element.value is String){
-                    return element.value
-                }
-            }
-            return ""
-        }
-
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(70.dp)
-                .padding(10.dp)
-                .clickable { navigator.push(Screen.NewTask(exampleDoc)) }
-
-        )
-        {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (document.image != null) {
-                    document.image = painterResource(id = R.drawable.ic_launcher_background)
-                }
-                document.image?.let {
-                    Image(
-                        it,
-                        contentDescription = "DocImage",
-                        modifier = Modifier.clip(RoundedCornerShape(percent = 10))
-                    )
-                }
-                Spacer(modifier = Modifier.width(15.dp))
-                Column {
-                    Text(document.header)
-                    Text(findFirstString(document.documentContents))
-                }
-            }
-        }
-
-    }
-
-    @Composable
-    fun ExamplePreview() {
-        DocumentPreview(
-            document = Document(header = "Example header",
-                image = painterResource(id = R.drawable.ic_launcher_background),
-                documentContents = mutableListOf(TextData(0,"a", "aa"), TextData(1,"b", "bb"), TextData(3,"c", "cc")))
-        )
-    }
-
-
-
-
-
-
-    LazyColumn {
-
-        items(count = 20) {
-            ExamplePreview()
-
-
-        }
-    }
-
-
+class MaybeTask {
+    @DocumentId
+    val id = ""
+    val title: String? = null
+    val checked: Boolean? = null
+    val contents: String? = null
 }
 
+data class Task(
+    val id: String,
+    val title: String,
+    val checked: Boolean,
+    val contents: String?
+)
 
+fun maybeToTask(maybe: MaybeTask) =
+    maybe.title?.let { title ->
+        maybe.checked?.let { checked ->
+            Task(maybe.id, title, checked, maybe.contents)
+        }
+    }
 
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun ShowTasksScreen() {
+    val uiContextViewModel: UiContextViewModel = viewModel()
+    LaunchedEffect(Unit) {
+        uiContextViewModel.loadingBar.enabled = true
+    }
 
+    val query = Firebase.firestore
+        .collection("users/data/${Firebase.auth.currentUser!!.uid}")
+
+    val documents: List<Task> = rememberLiveArray(
+        MaybeTask::class.java,
+        query,
+        ::maybeToTask,
+        onDataChanged = {
+            uiContextViewModel.loadingBar.enabled = false
+        }
+    )
+
+    LazyColumn {
+        items(
+            count = documents.size,
+            key = { doc -> documents[doc].id }
+        ) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .animateItemPlacement()
+            )
+            {
+                Text(documents[it].title)
+                if (documents[it].contents != null) {
+                    Text(documents[it].contents.toString())
+                }
+            }
+        }
+    }
+}
