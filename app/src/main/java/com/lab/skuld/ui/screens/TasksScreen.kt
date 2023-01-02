@@ -30,35 +30,6 @@ import com.lab.skuld.ui.Screen
 import com.lab.skuld.ui.UiContextViewModel
 import com.lab.skuld.ui.rememberLiveArray
 
-/*
-class MaybeTask {
-    //@DocumentId
-    val id = ""
-    val startDate: Timestamp? = null
-    val endDate: Timestamp? = null
-    val title: String? = null
-    val checked: Boolean? = null
-    val contents: String? = null
-}
-
-data class Task(
-    val id: String,
-    val startDate: Date? = null,
-    val endDate: Date? = null,
-    val title: String,
-    val checked: Boolean?,
-    val contents: String?,
-)
-
-fun maybeToTask(maybe: MaybeTask) =
-    maybe.title?.let { title ->
-        maybe.checked?.let { checked ->
-            Task(maybe.id, title = title, checked = checked, contents = maybe.contents)
-        }
-    }
-
-
-*/
 
 fun TaskToEvent(task: Task): Event{
     var event = Event(id = task.id, title = task.title, checked = task.checked, contents = task.contents, endDate = null, startDate = null)
