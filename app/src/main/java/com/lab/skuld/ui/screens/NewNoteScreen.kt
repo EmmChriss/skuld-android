@@ -32,10 +32,60 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.lab.skuld.ui.Event
+import com.google.firebase.Timestamp
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.DocumentId
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.lab.skuld.ui.Screen
 import com.lab.skuld.ui.UiContextViewModel
 import java.util.Date
+
+
+class MaybeEvent {
+    @DocumentId
+    val id = ""
+    val startDate: Timestamp? = null
+    val endDate: Timestamp? = null
+    val title: String? = null
+    val checked: Boolean? = null
+    val contents: String? = null
+}
+
+data class Event(
+    val id: String,
+    val startDate: Date?,
+    val endDate: Date?,
+    val title: String,
+    val checked: Boolean?,
+    val contents: String?,
+)
+
+data class EventNoID(
+    val startDate: Date?,
+    val endDate: Date?,
+    val title: String,
+    val checked: Boolean?,
+    val contents: String?,
+)
+
+fun maybeToEvent(maybe: MaybeEvent): Event? {
+    if ((maybe.startDate == null && maybe.endDate == null) || maybe.title == null)
+        return null
+
+    return Event(
+        maybe.id,
+        maybe.startDate?.toDate(),
+        maybe.endDate?.toDate(),
+        maybe.title,
+        maybe.checked,
+        maybe.contents
+    )
+}
+
+
+
+
 
 fun eventToDocument(event: Event): Document {
     val lines = event.contents?.split("\n") ?: emptyList()
@@ -50,18 +100,31 @@ fun eventToDocument(event: Event): Document {
 
 fun documentToEvent(document: Document): Event {
     val contents = document.documentContents.joinToString("\n") { data -> "${data.header} ${data.value}" }
-    return Event(id = "", startDate = null, endDate = null, title = document.header, checked = null, contents = contents)
+    return Event(id = "", startDate = null, endDate = null, title = document.header, checked = true, contents = contents)
 }
-val event = Event(id = "123", startDate = Date(), endDate = null, title = "My Event", checked = null, contents = "Line 1\nLine 2\nLine 3")
+
+fun documentToEventNoID(document: Document): EventNoID {
+    val contents = document.documentContents.joinToString("\n") { data -> "${data.header} ${data.value}" }
+    return EventNoID( startDate = null, endDate = null, title = document.header, checked = true, contents = contents)
+}
+
+
+
+
+val eventt = Event(id = "", startDate = Date(), endDate = Date(), title = "My Event", checked = true, contents = "Line 1\nLine 2\nLine 3")
 
 
 data class TextData(var index: Int, var header: String, var value: String)
-data class Document(var header: String= "Title", var image: Painter? = null, var  documentContents: List<TextData> = listOf())
+data class Document(var header: String= "Title", var image: Painter? = null, var  documentContents: List<TextData> = listOf(),var checked: Boolean? = null)
 @Composable
-fun ShowNewNoteScreen(documentt: Event = event){
-    var documentt = Event(id = "123", startDate = Date(), endDate = null, title = "My Event", checked = null, contents = "Line 1\nLine 2\nLine 3")
+
+
+
+fun ShowNewNoteScreen(documentt: Event = eventt){
+    var documentt = eventt
     var document = eventToDocument(documentt)
     val viewModel: UiContextViewModel = viewModel()
+
 
     var newHeader by remember { mutableStateOf("") }
     var documentTitle by remember { mutableStateOf("") }
@@ -192,17 +255,39 @@ fun ShowNewNoteScreen(documentt: Event = event){
 
 
 
-        /*Button(onClick = {
-            // Navigate to a different screen when the button is clicked
-            navigator.push(Screen.Task(document))
-        }) {
-            Text("Save")
-        }*/
+        var saveText = "Save"
         Button(onClick = {
-            // Navigate to a different screen when the button is clicked
-            viewModel.nav.push(Screen.TaskP(documentToEvent(document)))
+
+
+
+            document.documentContents = textElementsValues
+            document.header = newHeader
+            document.checked = false
+            val eventNoID = documentToEventNoID(document)
+            var saveText = "Save"
+            Firebase.firestore
+                .collection("users/data/${Firebase.auth.currentUser!!.uid}")
+                .document()
+                .set(eventNoID)
+                .addOnSuccessListener {
+                viewModel.nav.push(Screen.TaskP(documentToEvent(document)))
+            }
+                .addOnFailureListener {
+                    saveText = "Upload Failed"
+                }
+
+            //viewModel.nav.push(Screen.TaskP(documentToEvent(document)))
+
+           /*query.document().set(event)
+                .addOnSuccessListener {
+                    viewModel.nav.push(Screen.TaskP(documentToEvent(document)))
+                }
+                .addOnFailureListener {
+                    saveText = "Upload Failed"
+                }*/
+
         }) {
-            Text("Save")
+            Text(saveText)
         }
 
 

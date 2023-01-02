@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
@@ -15,13 +16,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.lab.skuld.ui.Event
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.lab.skuld.ui.Screen
+import com.lab.skuld.ui.UiContextViewModel
+
+//import com.lab.skuld.ui.Event
 
 //data class TextData(var index: Int, var header: String, var value: String)
 @Composable
 fun ShowNoteScreen(documentt: Event) {
     var document = eventToDocument(documentt)
     val textElementsValues = remember { mutableStateListOf<TextData>() }
+    val viewModel: UiContextViewModel = viewModel()
 
     if (document.documentContents.isNotEmpty()) {
         for (element in document.documentContents) {
@@ -71,5 +77,14 @@ fun ShowNoteScreen(documentt: Event) {
                     .wrapContentHeight(),
             )
         }
+       Button(onClick = {
+
+           viewModel.nav.push(Screen.NewTask(documentt))
+
+
+       }) {
+           Text("EDIT")
+
+       }
     }
 }
