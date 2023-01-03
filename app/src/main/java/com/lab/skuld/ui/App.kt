@@ -230,7 +230,7 @@ fun Navigation() {
     Scaffold(
         scaffoldState = scaffoldState,
         drawerContent = {
-            Column(modifier = Modifier.fillMaxWidth(),horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(modifier = Modifier.fillMaxWidth(),horizontalAlignment = Alignment.CenterHorizontally, ) {
                 Text("Skuld", modifier = Modifier.padding(16.dp), fontSize = 40.sp, fontWeight = FontWeight.Bold)
                 Divider(modifier = Modifier.padding(7.dp))
                 menuOptions.forEach {
