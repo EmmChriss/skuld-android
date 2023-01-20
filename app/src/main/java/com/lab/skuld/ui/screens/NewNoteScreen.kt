@@ -186,6 +186,7 @@ fun ShowNewNoteScreen(documentt: Event = eventt){
                         TextButton(
                             onClick = {
                                 newHeader = elementHeader
+
                                 textElementsValues.add(TextData(textElementsValues.size, elementHeader, ""))
                                 elementHeader = ""
                                 isDialogVisible = false
