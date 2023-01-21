@@ -85,7 +85,6 @@ fun Auth(content: @Composable () -> Unit) {
     if (!loggedIn) {
         ShowLoginScreen()
     } else {
-        //Firebase.auth.signOut()
         content()
     }
 
@@ -119,10 +118,6 @@ sealed class Screen(val title: String, val content: @Composable () -> Unit, val 
         title = "Calendar",
         content = { ShowCalendarScreen() }
     )
-    // class ExistingNote(title: String): Screen(
-    //     title = title
-    //     content
-    // )
 }
 
 data class Navigator(
