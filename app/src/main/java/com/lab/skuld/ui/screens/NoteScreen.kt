@@ -119,8 +119,7 @@ fun ShowNoteScreen(documentt: Event) {
            Text("EDIT")
 
        }
-
-           NewElementDialog(documentt.id)
+       DeleteElementDialog(documentt.id)
 
 
 
@@ -131,7 +130,7 @@ fun ShowNoteScreen(documentt: Event) {
 
 
 @Composable
-fun NewElementDialog(taskID : String) {
+fun DeleteElementDialog(taskID : String) {
     var isDialogVisible by remember { mutableStateOf(false) }
     val uiContextViewModel: UiContextViewModel = viewModel()
     Column(
