@@ -281,10 +281,10 @@ fun ShowNewNoteScreen(documentt: Event = emptyEventorTask){
                         saveText = "Upload Failed"
                     }
             }else{
-                val documentUp = documentToEvent(document)
+                val documentUp = documentToEventNoID(document)
                 Firebase.firestore
                     .collection("users/data/${Firebase.auth.currentUser!!.uid}")
-                    .document()
+                    .document(documentt.id)
                     .set(documentUp)
                     .addOnSuccessListener {
                         viewModel.nav.push(Screen.TaskP(documentToEvent(document)))
