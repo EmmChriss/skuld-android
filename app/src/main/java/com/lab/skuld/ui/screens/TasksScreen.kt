@@ -8,19 +8,27 @@ import com.firebase.ui.firestore.ChangeEventListener
 import com.firebase.ui.firestore.ClassSnapshotParser*/
 //import com.lab.skuld.ui.maybeToEvent
 
+//import androidx.compose.foundation.layout.BoxScopeInstance.align
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentId
@@ -32,7 +40,7 @@ import com.lab.skuld.ui.rememberLiveArray
 
 
 fun TaskToEvent(task: Task): Event{
-    var event = Event(id = task.id, title = task.title, checked = task.checked, contents = task.contents, endDate = null, startDate = null)
+    val event = Event(id = task.id, title = task.title, checked = task.checked, contents = task.contents, endDate = null, startDate = null)
     return event
 }
 
@@ -78,25 +86,44 @@ fun ShowTasksScreen() {
         }
     )
 
-    LazyColumn {
+    LazyColumn(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
         items(
+
             count = documents.size,
             key = { doc -> documents[doc].id }
         ) {
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
+                    .height(150.dp)
                     .animateItemPlacement()
+                    .background(color = MaterialTheme.colors.primary, shape = RoundedCornerShape(10.dp))
+                    .padding(1.dp)
                     .clickable { uiContextViewModel.nav.push(Screen.TaskP(TaskToEvent(documents[it]))) }
             )
             {
-                Text(documents[it].title)
-                Spacer(modifier = Modifier.padding(20.dp))
-                if (documents[it].contents != null) {
-                    Text(documents[it].contents.toString())
+                Column (modifier = Modifier
+                    .wrapContentSize(Alignment.Center)
+                    .fillMaxWidth()
+                    .padding(10.dp)){
+                    Text(
+                        fontSize = 22.sp,
+                        text = documents[it].title,
+                        color = MaterialTheme.colors.onPrimary
+                    )
+                    Spacer(modifier = Modifier.padding(1.dp))
+                    if (documents[it].contents != null) {
+                        Text(
+                            color = MaterialTheme.colors.onPrimary,
+                            modifier = Modifier.padding(5.dp),
+                            text = documents[it].contents.toString()
+                        )
+                    }
                 }
             }
+            Spacer(modifier = Modifier
+                .padding(10.dp))
         }
     }
+
 }

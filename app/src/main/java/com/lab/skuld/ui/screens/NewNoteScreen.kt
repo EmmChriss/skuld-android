@@ -111,18 +111,19 @@ fun documentToEventNoID(document: Document): EventNoID {
 
 
 
-val eventt = Event(id = "", startDate = Date(), endDate = Date(), title = "My Event", checked = true, contents = "Line 1\nLine 2\nLine 3")
+val emptyEventorTask = Event(id = "", startDate = Date(), endDate = Date(), title = "New Task/Event", checked = true, contents = "")
 
 
 data class TextData(var index: Int, var header: String, var value: String)
-data class Document(var header: String= "Title", var image: Painter? = null, var  documentContents: List<TextData> = listOf(),var checked: Boolean? = null)
+data class Document(var header: String= "", var image: Painter? = null, var  documentContents: List<TextData> = listOf(),var checked: Boolean? = null)
+
 @Composable
-
-
-
-fun ShowNewNoteScreen(documentt: Event = eventt){
-    var documentt = eventt
-    var document = eventToDocument(documentt)
+fun ShowNewNoteScreen(documentt: Event = emptyEventorTask){
+    var isNewTask = false
+    if(documentt.id == ""){
+        isNewTask = true
+    }
+    val document = eventToDocument(documentt)
     val viewModel: UiContextViewModel = viewModel()
 
 
@@ -186,6 +187,7 @@ fun ShowNewNoteScreen(documentt: Event = eventt){
                         TextButton(
                             onClick = {
                                 newHeader = elementHeader
+
                                 textElementsValues.add(TextData(textElementsValues.size, elementHeader, ""))
                                 elementHeader = ""
                                 isDialogVisible = false
@@ -259,33 +261,38 @@ fun ShowNewNoteScreen(documentt: Event = eventt){
         Button(onClick = {
 
 
-
+            document.header = documentTitle
             document.documentContents = textElementsValues
-            document.header = newHeader
-            document.checked = false
-            val eventNoID = documentToEventNoID(document)
-            var saveText = "Save"
-            Firebase.firestore
-                .collection("users/data/${Firebase.auth.currentUser!!.uid}")
-                .document()
-                .set(eventNoID)
-                .addOnSuccessListener {
-                viewModel.nav.push(Screen.TaskP(documentToEvent(document)))
-            }
-                .addOnFailureListener {
-                    saveText = "Upload Failed"
-                }
 
-            //viewModel.nav.push(Screen.TaskP(documentToEvent(document)))
 
-           /*query.document().set(event)
-                .addOnSuccessListener {
+
+            saveText = "Save"
+            if(isNewTask){
+                document.checked = false
+                val eventNoID = documentToEventNoID(document)
+                Firebase.firestore
+                    .collection("users/data/${Firebase.auth.currentUser!!.uid}")
+                    .document()
+                    .set(eventNoID)
+                    .addOnSuccessListener {
                     viewModel.nav.push(Screen.TaskP(documentToEvent(document)))
-                }
-                .addOnFailureListener {
-                    saveText = "Upload Failed"
-                }*/
-
+                    }
+                    .addOnFailureListener {
+                        saveText = "Upload Failed"
+                    }
+            }else{
+                val documentUp = documentToEventNoID(document)
+                Firebase.firestore
+                    .collection("users/data/${Firebase.auth.currentUser!!.uid}")
+                    .document(documentt.id)
+                    .set(documentUp)
+                    .addOnSuccessListener {
+                        viewModel.nav.push(Screen.TaskP(documentToEvent(document)))
+                    }
+                    .addOnFailureListener {
+                        saveText = "Upload Failed"
+                    }
+            }
         }) {
             Text(saveText)
         }

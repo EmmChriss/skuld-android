@@ -2,6 +2,10 @@ package com.lab.skuld.ui.screens
 
 
 
+//import androidx.compose.ui.graphics.Color
+/*import com.lab.skuld.ui.Event
+import com.lab.skuld.ui.MaybeEvent
+import com.lab.skuld.ui.maybeToEvent*/
 import android.util.Log
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
@@ -25,15 +29,14 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.himanshoe.kalendar.Kalendar
+import com.himanshoe.kalendar.color.KalendarThemeColor
 import com.himanshoe.kalendar.model.KalendarDay
 import com.himanshoe.kalendar.model.KalendarEvent
 import com.himanshoe.kalendar.model.KalendarType
-/*import com.lab.skuld.ui.Event
-import com.lab.skuld.ui.MaybeEvent
-import com.lab.skuld.ui.maybeToEvent*/
 import com.lab.skuld.ui.rememberLiveArray
 import kotlinx.datetime.LocalDate
 import java.util.Date
+
 
 
 @Composable
@@ -95,6 +98,7 @@ private fun ShowExpandableCalendar(
     onDateSelected: (KalendarDay, List<KalendarEvent>) -> Unit = {_, _ ->},
     content: @Composable () -> Unit = {}) {
 
+
     val swipeableState = rememberSwipeableState(CalendarState.COLLAPSED)
     val anchors = mapOf(0f to CalendarState.COLLAPSED, 1f to CalendarState.EXPANDED)
 
@@ -122,14 +126,25 @@ private fun ShowExpandableCalendar(
                             kalendarType = KalendarType.Oceanic(true),
                             kalendarEvents = events,
                             onCurrentDayClick = onDateSelected,
-                            takeMeToDate = currentDay
+                            takeMeToDate = currentDay,
+                            kalendarThemeColor= KalendarThemeColor(
+                                backgroundColor= MaterialTheme.colors.primaryVariant,
+                                dayBackgroundColor = MaterialTheme.colors.secondary,
+                                headerTextColor = MaterialTheme.colors.onBackground,
+                            )
                         )
 
                         CalendarState.EXPANDED -> Kalendar(
                             kalendarType = KalendarType.Firey,
                             kalendarEvents = events,
                             onCurrentDayClick = onDateSelected,
-                            takeMeToDate = currentDay
+                            takeMeToDate = currentDay,
+                            kalendarThemeColor= KalendarThemeColor(
+                                backgroundColor= MaterialTheme.colors.primaryVariant,
+                                dayBackgroundColor = MaterialTheme.colors.secondary,
+                                headerTextColor = MaterialTheme.colors.onBackground,
+                            )
+
                         )
                     }
                     Spacer(modifier = Modifier.fillMaxWidth())

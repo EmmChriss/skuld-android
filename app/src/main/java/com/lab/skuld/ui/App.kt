@@ -85,7 +85,6 @@ fun Auth(content: @Composable () -> Unit) {
     if (!loggedIn) {
         ShowLoginScreen()
     } else {
-        //Firebase.auth.signOut()
         content()
     }
 
@@ -119,10 +118,6 @@ sealed class Screen(val title: String, val content: @Composable () -> Unit, val 
         title = "Calendar",
         content = { ShowCalendarScreen() }
     )
-    // class ExistingNote(title: String): Screen(
-    //     title = title
-    //     content
-    // )
 }
 
 data class Navigator(
@@ -230,7 +225,7 @@ fun Navigation() {
     Scaffold(
         scaffoldState = scaffoldState,
         drawerContent = {
-            Column(modifier = Modifier.fillMaxWidth(),horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(modifier = Modifier.fillMaxWidth(),horizontalAlignment = Alignment.CenterHorizontally, ) {
                 Text("Skuld", modifier = Modifier.padding(16.dp), fontSize = 40.sp, fontWeight = FontWeight.Bold)
                 Divider(modifier = Modifier.padding(7.dp))
                 menuOptions.forEach {
