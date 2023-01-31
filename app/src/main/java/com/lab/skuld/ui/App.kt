@@ -52,10 +52,6 @@ import com.lab.skuld.ui.theme.SkuldFrontendTheme
 import kotlinx.coroutines.launch
 import java.util.Date
 
-
-
-
-
 // Main Composable entry-point
 @Composable
 fun App() {
@@ -65,9 +61,6 @@ fun App() {
         }
     }
 }
-
-
-
 
 @Composable
 fun Auth(content: @Composable () -> Unit) {
@@ -89,6 +82,7 @@ fun Auth(content: @Composable () -> Unit) {
     }
 
 }
+
 val emptyEvent = Event(id = "", startDate = Date(), endDate = null, title = "", checked = null, contents = null)
 sealed class Screen(val title: String, val content: @Composable () -> Unit, val onBack: Screen? = null ) {
 

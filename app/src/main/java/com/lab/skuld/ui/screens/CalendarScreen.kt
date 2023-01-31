@@ -1,11 +1,5 @@
 package com.lab.skuld.ui.screens
 
-
-
-//import androidx.compose.ui.graphics.Color
-/*import com.lab.skuld.ui.Event
-import com.lab.skuld.ui.MaybeEvent
-import com.lab.skuld.ui.maybeToEvent*/
 import android.util.Log
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
@@ -34,10 +28,9 @@ import com.himanshoe.kalendar.model.KalendarDay
 import com.himanshoe.kalendar.model.KalendarEvent
 import com.himanshoe.kalendar.model.KalendarType
 import com.lab.skuld.ui.rememberLiveArray
+import com.lab.skuld.ui.widget.Calendar
 import kotlinx.datetime.LocalDate
 import java.util.Date
-
-
 
 @Composable
 fun ShowCalendarScreen() {
@@ -68,13 +61,12 @@ fun ShowCalendarScreen() {
                 .verticalScroll(rememberScrollState())
         ) {
             documents.filter { doc ->
-                val c = currentDay
-                val s = doc.startDate
-                val e = doc.endDate
-                Log.i("current <> start", currentDay.toString() + "   <>   " + s.toString())
+                val currentDate = currentDay
+                val startDate = doc.startDate
+                val endDate = doc.endDate
                 when {
-                    s != null && (c.year < s.year || c.month < s.month || c.day < s.day) -> false
-                    e != null && (c.year > e.year || c.month > e.month || c.day > e.day) -> false
+                    startDate != null && startDate.after(currentDate) -> false
+                    endDate != null && endDate.before(currentDate) -> false
                     else -> true
                 }
             }.forEach {
@@ -98,7 +90,9 @@ private fun ShowExpandableCalendar(
     onDateSelected: (KalendarDay, List<KalendarEvent>) -> Unit = {_, _ ->},
     content: @Composable () -> Unit = {}) {
 
+    Calendar()
 
+    /*
     val swipeableState = rememberSwipeableState(CalendarState.COLLAPSED)
     val anchors = mapOf(0f to CalendarState.COLLAPSED, 1f to CalendarState.EXPANDED)
 
@@ -127,8 +121,8 @@ private fun ShowExpandableCalendar(
                             kalendarEvents = events,
                             onCurrentDayClick = onDateSelected,
                             takeMeToDate = currentDay,
-                            kalendarThemeColor= KalendarThemeColor(
-                                backgroundColor= MaterialTheme.colors.primaryVariant,
+                            kalendarThemeColor = KalendarThemeColor(
+                                backgroundColor = MaterialTheme.colors.primaryVariant,
                                 dayBackgroundColor = MaterialTheme.colors.secondary,
                                 headerTextColor = MaterialTheme.colors.onBackground,
                             )
@@ -153,6 +147,7 @@ private fun ShowExpandableCalendar(
             }
         }
     }
+     */
 }
 
 @Composable
