@@ -1,36 +1,35 @@
 package com.lab.skuld.ui.screens
 
-import android.util.Log
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.himanshoe.kalendar.Kalendar
-import com.himanshoe.kalendar.color.KalendarThemeColor
-import com.himanshoe.kalendar.model.KalendarDay
-import com.himanshoe.kalendar.model.KalendarEvent
-import com.himanshoe.kalendar.model.KalendarType
 import com.lab.skuld.ui.rememberLiveArray
 import com.lab.skuld.ui.widget.Calendar
+import com.lab.skuld.ui.widget.rememberCalendarState
+import kotlinx.datetime.DateTimePeriod
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.atTime
+import kotlinx.datetime.toInstant
 import java.util.Date
+
+data class CalendarEvent(
+    val start: LocalDateTime,
+    val duration: DateTimePeriod,
+    val title: String,
+)
 
 @Composable
 fun ShowCalendarScreen() {
@@ -42,118 +41,51 @@ fun ShowCalendarScreen() {
         query,
         ::maybeToEvent
     )
-    val events = documents.map { doc ->
-        val date = (doc.startDate ?: doc.endDate!!).let {
-            LocalDate(it.year, it.month, it.day)
-        }
-        KalendarEvent(date, doc.title, doc.contents)
-    }
-    var currentDay: Date by remember { mutableStateOf(Date()) }
-
-    ShowExpandableCalendar(
-        events = events,
-        onDateSelected = { day, _ ->
-            currentDay = Date(day.localDate.year - 1900, day.localDate.monthNumber - 1, day.localDate.dayOfMonth)
-         },
-    ) {
-        Column(
-            modifier = Modifier
-                .verticalScroll(rememberScrollState())
-        ) {
-            documents.filter { doc ->
-                val currentDate = currentDay
-                val startDate = doc.startDate
-                val endDate = doc.endDate
-                when {
-                    startDate != null && startDate.after(currentDate) -> false
-                    endDate != null && endDate.before(currentDate) -> false
-                    else -> true
+    val events by remember {
+        derivedStateOf {
+            documents.map { doc ->
+                val date = (doc.startDate ?: doc.endDate!!).let {
+                    LocalDate(it.year, it.month, it.day)
                 }
-            }.forEach {
-                ShowEvent(it)
+                CalendarEvent(
+                    start = date.atTime(LocalTime.fromSecondOfDay(10000)),
+                    duration = DateTimePeriod(hours = 1),
+                    title = doc.title
+                )
             }
         }
     }
-}
 
-enum class CalendarState {
-    COLLAPSED,
-    EXPANDED
-}
+    val calendarState = rememberCalendarState()
 
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-@Preview
-private fun ShowExpandableCalendar(
-    currentDay: LocalDate? = null,
-    events: List<KalendarEvent> = listOf(),
-    onDateSelected: (KalendarDay, List<KalendarEvent>) -> Unit = {_, _ ->},
-    content: @Composable () -> Unit = {}) {
+    val shownEvents by remember {
+        derivedStateOf {
+            events.filter { evt ->
+                val startDateTime = evt.start
+                when (startDateTime.date) {
+                    calendarState.selectedDate -> true
+                    else -> false
+                }
+            }
+        }
+    }
 
-    Calendar()
+    Calendar(calendarState)
 
-    /*
-    val swipeableState = rememberSwipeableState(CalendarState.COLLAPSED)
-    val anchors = mapOf(0f to CalendarState.COLLAPSED, 1f to CalendarState.EXPANDED)
-
-    Box(
+    Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .swipeable(
-                state = swipeableState,
-                anchors = anchors,
-                thresholds = { _, _ -> FractionalThreshold(0.3f) },
-                orientation = Orientation.Vertical
-            )
+            .verticalScroll(rememberScrollState())
     ) {
-        Crossfade(
-            targetState = swipeableState.targetValue
-        ) { v ->
-            Box(
-                modifier = Modifier
-                    .animateContentSize()
-                    .fillMaxHeight(swipeableState.progress.fraction)
-            ) {
-                Column {
-                    when (v) {
-                        CalendarState.COLLAPSED -> Kalendar(
-                            kalendarType = KalendarType.Oceanic(true),
-                            kalendarEvents = events,
-                            onCurrentDayClick = onDateSelected,
-                            takeMeToDate = currentDay,
-                            kalendarThemeColor = KalendarThemeColor(
-                                backgroundColor = MaterialTheme.colors.primaryVariant,
-                                dayBackgroundColor = MaterialTheme.colors.secondary,
-                                headerTextColor = MaterialTheme.colors.onBackground,
-                            )
-                        )
-
-                        CalendarState.EXPANDED -> Kalendar(
-                            kalendarType = KalendarType.Firey,
-                            kalendarEvents = events,
-                            onCurrentDayClick = onDateSelected,
-                            takeMeToDate = currentDay,
-                            kalendarThemeColor= KalendarThemeColor(
-                                backgroundColor= MaterialTheme.colors.primaryVariant,
-                                dayBackgroundColor = MaterialTheme.colors.secondary,
-                                headerTextColor = MaterialTheme.colors.onBackground,
-                            )
-
-                        )
-                    }
-                    Spacer(modifier = Modifier.fillMaxWidth())
-                    content()
-                }
-            }
+        shownEvents.forEach {
+            ShowEvent(it)
         }
     }
-     */
 }
 
 @Composable
-fun ShowEvent(evt: Event) {
-    Box {
+fun ShowEvent(evt: CalendarEvent) {
+    Column {
         Text(evt.title)
-        evt.contents?.let { Text(it) }
+        evt.title.let { Text(it) }
     }
 }

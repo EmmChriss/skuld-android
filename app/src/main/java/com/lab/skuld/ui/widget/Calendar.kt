@@ -1,6 +1,5 @@
 package com.lab.skuld.ui.widget
 
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
@@ -14,17 +13,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -32,6 +26,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.runtime.Composable
@@ -76,6 +71,11 @@ class CalendarState(defaultDate: LocalDate?) {
     val calendarInterval get() = when (calendarType) {
         CalendarType.WEEKLY -> DatePeriod(days = 7)
         CalendarType.MONTHLY -> DatePeriod(months = 1)
+    }
+
+    fun selectDate(date: LocalDate) {
+        selectedDate = date
+        visibleDate = date
     }
 }
 
@@ -122,6 +122,18 @@ fun Calendar(
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun CalendarHeader(state: CalendarState) {
+    var changeDirection by remember { mutableStateOf(1) }
+
+    fun next() {
+        changeDirection = 1
+        state.visibleDate = state.visibleDate.plus(state.calendarInterval)
+    }
+
+    fun prev() {
+        changeDirection = -1
+        state.visibleDate = state.visibleDate.minus(state.calendarInterval)
+    }
+
     Box (
         modifier = Modifier
             .fillMaxWidth()
@@ -136,13 +148,12 @@ fun CalendarHeader(state: CalendarState) {
             targetState = getFirstDateOfMonth(state.visibleDate),
             transitionSpec = {
                 val duration = 500
-                val direction = if (state.visibleDate.dayOfMonth > 15) 1 else -1
 
                 val slideIn = slideInVertically(animationSpec = tween(durationMillis = duration))
-                    { height -> direction * height } + fadeIn(animationSpec = tween(durationMillis = duration))
+                    { height -> changeDirection * height } + fadeIn(animationSpec = tween(durationMillis = duration))
 
                 val slideOut = slideOutVertically(animationSpec = tween(durationMillis = duration))
-                    { height -> -direction * height } + fadeOut(animationSpec = tween(durationMillis = duration))
+                    { height -> -changeDirection * height } + fadeOut(animationSpec = tween(durationMillis = duration))
 
                 slideIn with slideOut
             }
@@ -160,13 +171,16 @@ fun CalendarHeader(state: CalendarState) {
                 .align(Alignment.CenterEnd)
         ) {
             IconButton(
+                onClick = { state.selectDate(state.today) }
+            ) { Icon(Icons.Filled.Home, "Go to today") }
+            IconButton(
                 onClick = { state.calendarType = state.calendarType.other() }
             ) { Icon(Icons.Filled.DateRange, "Select date") }
             IconButton(
-                onClick = { state.visibleDate = state.visibleDate.minus(state.calendarInterval) }
+                onClick = ::prev
             ) { Icon(Icons.Filled.KeyboardArrowLeft, "Previous week") }
             IconButton(
-                onClick = { state.visibleDate = state.visibleDate.plus(state.calendarInterval) }
+                onClick = ::next
             ) { Icon(Icons.Filled.KeyboardArrowRight, "Next week") }
         }
     }
@@ -205,13 +219,19 @@ fun CalendarBodyMonthly(state: CalendarState) {
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
         items(firstDayOfMonth.dayOfWeek.ordinal) {
-            DayButton(state, firstDayOfMonth.minus(DatePeriod(days = 7 - it - 1)), true)
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                DayButton(state, firstDayOfMonth.minus(DatePeriod(days = firstDayOfMonth.dayOfWeek.ordinal - it)), true)
+            }
         }
         items(lastDayOfMonth.dayOfMonth) {
-            DayButton(state, firstDayOfMonth.plus(DatePeriod(days = it)))
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                DayButton(state, firstDayOfMonth.plus(DatePeriod(days = it)))
+            }
         }
         items(7 - lastDayOfMonth.dayOfWeek.ordinal - 1) {
-            DayButton(state, lastDayOfMonth.plus(DatePeriod(days = it + 1)), true)
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                DayButton(state, lastDayOfMonth.plus(DatePeriod(days = it + 1)), true)
+            }
         }
     }
 }
@@ -234,7 +254,7 @@ fun DayButton(state: CalendarState, date: LocalDate, background: Boolean = false
 
     IconButton(
         modifier = Modifier.background(backgroundColor, CircleShape),
-        onClick = { state.selectedDate = date }
+        onClick = { state.selectDate(date) }
     ) { Text(date.dayOfMonth.toString(), color = textColor) }
 }
 
