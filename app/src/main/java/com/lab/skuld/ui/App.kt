@@ -149,7 +149,7 @@ class UiContextViewModel : ViewModel() {
     fun setLoadingBar(loadingBar: LoadingBar) {
         this._loadingBar = _loadingBar ?: loadingBar
     }
-    var theme: String by mutableStateOf("light")
+    var theme: String by mutableStateOf("Light")
 }
 
 @Composable

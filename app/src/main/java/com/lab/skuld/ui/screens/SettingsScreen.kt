@@ -10,8 +10,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.RadioButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -35,7 +33,7 @@ fun ShowSettingsScreen() {
 fun RadioButtonsThemes() {
     val uiContextViewModel: UiContextViewModel = viewModel()
     val radioOptions = listOf("Light", "Dark", "C for 'Coming soon'")
-    val (selectedOption, onOptionSelected) = remember { mutableStateOf(radioOptions[0] ) }
+    //val (selectedOption) = remember { mutableStateOf(uiContextViewModel.theme ) }
 
     fun onOptionSelected(text: String) {
         when (text) {
@@ -59,7 +57,7 @@ fun RadioButtonsThemes() {
                 Modifier
                     .fillMaxWidth()
                     .selectable(
-                        selected = (text == selectedOption),
+                        selected = (text == uiContextViewModel.theme),
                         onClick = {
                             onOptionSelected(text)
                         }
@@ -67,7 +65,7 @@ fun RadioButtonsThemes() {
                     .padding(horizontal = 16.dp)
             ) {
                 RadioButton(
-                    selected = (text == selectedOption),
+                    selected = (text == uiContextViewModel.theme),
                     onClick = { onOptionSelected(text)}
                 )
                 Text(
