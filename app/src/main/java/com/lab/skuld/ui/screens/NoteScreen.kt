@@ -31,7 +31,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.lab.skuld.ui.Screen
-import com.lab.skuld.ui.UiContextViewModel
+import com.lab.skuld.ui.UIContextViewModel
 
 //import com.lab.skuld.ui.Event
 
@@ -44,7 +44,7 @@ import com.lab.skuld.ui.UiContextViewModel
 fun ShowNoteScreen(documentt: Event) {
     val document = eventToDocument(documentt)
     val textElementsValues = remember { mutableStateListOf<TextData>() }
-    val viewModel: UiContextViewModel = viewModel()
+    val viewModel: UIContextViewModel = viewModel()
 
     if (document.documentContents.isNotEmpty()) {
         for (element in document.documentContents) {
@@ -132,7 +132,7 @@ fun ShowNoteScreen(documentt: Event) {
 @Composable
 fun DeleteElementDialog(taskID : String) {
     var isDialogVisible by remember { mutableStateOf(false) }
-    val uiContextViewModel: UiContextViewModel = viewModel()
+    val uiContextViewModel: UIContextViewModel = viewModel()
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
