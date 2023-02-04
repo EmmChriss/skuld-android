@@ -1,14 +1,8 @@
 package com.lab.skuld.ui.screens
 
-import android.util.Log
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
@@ -22,11 +16,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.himanshoe.kalendar.Kalendar
-import com.himanshoe.kalendar.color.KalendarThemeColor
 import com.himanshoe.kalendar.model.KalendarDay
 import com.himanshoe.kalendar.model.KalendarEvent
-import com.himanshoe.kalendar.model.KalendarType
 import com.lab.skuld.ui.rememberLiveArray
 import com.lab.skuld.ui.widget.Calendar
 import kotlinx.datetime.LocalDate
