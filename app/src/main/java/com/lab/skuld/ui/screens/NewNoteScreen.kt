@@ -3,14 +3,17 @@ package com.lab.skuld.ui.screens
 
 
 
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
@@ -27,7 +30,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -117,6 +123,13 @@ val emptyEventorTask = Event(id = "", startDate = Date(), endDate = Date(), titl
 data class TextData(var index: Int, var header: String, var value: String)
 data class Document(var header: String= "", var image: Painter? = null, var  documentContents: List<TextData> = listOf(),var checked: Boolean? = null)
 
+
+
+
+
+
+
+
 @Composable
 fun ShowNewNoteScreen(documentt: Event = emptyEventorTask){
     var isNewTask = false
@@ -143,11 +156,18 @@ fun ShowNewNoteScreen(documentt: Event = emptyEventorTask){
 
 
 
-
+    val focusManager = LocalFocusManager.current
     Column(modifier = Modifier
         .padding(16.dp)
         .verticalScroll(rememberScrollState())
-        .fillMaxWidth()) {
+        .fillMaxWidth()
+        .defaultMinSize(minHeight = 500.dp)
+        .pointerInput(Unit) {
+            detectTapGestures(onTap = {
+                focusManager.clearFocus()
+            })
+        }
+    ) {
 
 
         @Composable
@@ -213,7 +233,10 @@ fun ShowNewNoteScreen(documentt: Event = emptyEventorTask){
                     onValueChange = {
                         textElementsValues[index] = textElementsValues[index].copy(value = it)
                     },
-                    label = { Text("Content") }
+                    label = { Text("Content") },
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp)),
+
                 )
                 TextButton(
                     onClick = {
@@ -242,6 +265,7 @@ fun ShowNewNoteScreen(documentt: Event = emptyEventorTask){
             modifier = Modifier
                 .padding(10.dp)
                 .align(Alignment.CenterHorizontally)
+                .clip(RoundedCornerShape(10.dp))
         )
         Spacer(modifier = Modifier.padding(10.dp))
 
