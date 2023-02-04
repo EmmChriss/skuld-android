@@ -47,6 +47,7 @@ import com.lab.skuld.ui.screens.ShowCalendarScreen
 import com.lab.skuld.ui.screens.ShowLoginScreen
 import com.lab.skuld.ui.screens.ShowNewNoteScreen
 import com.lab.skuld.ui.screens.ShowNoteScreen
+import com.lab.skuld.ui.screens.ShowSettingsScreen
 import com.lab.skuld.ui.screens.ShowTasksScreen
 import com.lab.skuld.ui.theme.SkuldFrontendTheme
 import kotlinx.coroutines.launch
@@ -112,6 +113,12 @@ sealed class Screen(val title: String, val content: @Composable () -> Unit, val 
         title = "Calendar",
         content = { ShowCalendarScreen() }
     )
+
+    class Settings() : Screen(
+        title = "Settings",
+        content = { ShowSettingsScreen()},
+        //onBack =
+    )
 }
 
 data class Navigator(
@@ -142,6 +149,7 @@ class UiContextViewModel : ViewModel() {
     fun setLoadingBar(loadingBar: LoadingBar) {
         this._loadingBar = _loadingBar ?: loadingBar
     }
+    var theme: String by mutableStateOf("light")
 }
 
 @Composable
@@ -153,7 +161,8 @@ fun Navigation() {
         /* All screens */
         Screen.Tasks(),
         Screen.Calendar(),
-        Screen.NewTask(emptyEvent)
+        Screen.NewTask(emptyEvent),
+        Screen.Settings(),
     ) }
     var currentMenuOption: Screen by remember { mutableStateOf(
         /* Default screen */

@@ -1,46 +1,56 @@
 package com.lab.skuld.ui.screens
 
-import androidx.compose.material.SnackbarHostState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.Scaffold
-import androidx.compose.material.TopAppBar
-import androidx.compose.material.rememberScaffoldState
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import com.google.firebase.auth.AuthCredential
-import com.google.firebase.auth.ktx.auth
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Icon
+import androidx.compose.material.LinearProgressIndicator
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedButton
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Scaffold
+import androidx.compose.material.SnackbarHostState
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MailOutline
-import androidx.compose.runtime.*
+import androidx.compose.material.rememberScaffoldState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
-
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 data class LoadingState private constructor(val status: Status, val msg: String? = null) {
     companion object {
@@ -95,6 +105,17 @@ class LoginScreenViewModel : ViewModel() {
     }
 
     fun signInAnonymously() = viewModelScope.launch {
+        try {
+            loadingState.emit(LoadingState.LOADING)
+            Firebase.auth.signInAnonymously().await()
+            loadingState.emit(LoadingState.LOADED)
+        } catch (e: Exception) {
+            loadingState.emit(LoadingState.error(e.localizedMessage))
+        }
+    }
+
+
+    fun signInLocally() = viewModelScope.launch {
         try {
             loadingState.emit(LoadingState.LOADING)
             Firebase.auth.signInAnonymously().await()
@@ -186,6 +207,8 @@ fun ShowLoginScreen() {
                         }
                         else -> {}
                     }
+
+
                 }
             )
         }
@@ -345,6 +368,48 @@ private fun ProviderButtons(viewModel: LoginScreenViewModel) {
                         style = MaterialTheme.typography.button,
                         color = MaterialTheme.colors.onSurface,
                         text = "Anonymous"
+                    )
+                    Icon(
+                        tint = Color.Transparent,
+                        imageVector = Icons.Default.MailOutline,
+                        contentDescription = null,
+                    )
+                }
+            )
+        }
+    )
+
+
+    /* Local option separator */
+    Spacer(modifier = Modifier.height(4.dp))
+    Text(
+        modifier = Modifier.fillMaxWidth(),
+        textAlign = TextAlign.Center,
+        style = MaterialTheme.typography.caption,
+        text = "Or use local account"
+    )
+    Spacer(modifier = Modifier.height(2.dp))
+
+    /* Local */
+    OutlinedButton(
+        border = ButtonDefaults.outlinedBorder.copy(width = 1.dp),
+        modifier = Modifier.fillMaxWidth().height(50.dp),
+        onClick = { viewModel.signInLocally() },
+        content = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                content = {
+                    // Icon(
+                    //     tint = Color.Unspecified,
+                    //     painter = painterResource(id = R.drawable.googleg_standard_color_18),
+                    //     contentDescription = null,
+                    // )
+                    Text(
+                        style = MaterialTheme.typography.button,
+                        color = MaterialTheme.colors.onSurface,
+                        text = "Local"
                     )
                     Icon(
                         tint = Color.Transparent,
