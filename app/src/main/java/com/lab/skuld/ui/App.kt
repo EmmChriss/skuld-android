@@ -1,40 +1,21 @@
 package com.lab.skuld.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.AlertDialog
-import androidx.compose.material.Button
-import androidx.compose.material.Divider
-import androidx.compose.material.FabPosition
-import androidx.compose.material.FloatingActionButton
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.LinearProgressIndicator
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.rememberScaffoldState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
@@ -127,20 +108,23 @@ data class Navigator(
     val set: (Screen) -> Unit,
 )
 
-data class LoadingBar(
-    private val _enabled: MutableState<Boolean>
-) {
-    var enabled by _enabled
+class LoadingBar {
+    var enabled by mutableStateOf(false)
 }
 
-class UiContextViewModel : ViewModel() {
-    private var _nav: Navigator? = null
-    private var _loadingBar:  LoadingBar? = null
-    val nav
-        get() = _nav!!
+class SearchBar {
+    var query by mutableStateOf(TextFieldValue())
+}
 
-    val loadingBar
-        get() = _loadingBar!!
+class UIContextViewModel : ViewModel() {
+    private var _nav: Navigator? = null
+    val nav get() = _nav!!
+
+    private var _loadingBar: LoadingBar? = null
+    val loadingBar get() = _loadingBar!!
+
+    private var _searchBar: SearchBar? = null
+    val searchBar get() = _searchBar!!
 
     fun setNav(nav: Navigator) {
         this._nav = _nav ?: nav
@@ -150,6 +134,11 @@ class UiContextViewModel : ViewModel() {
         this._loadingBar = _loadingBar ?: loadingBar
     }
     var theme: String by mutableStateOf("Light")
+
+
+    fun setSearchBar(searchBar: SearchBar) {
+        this._searchBar = _searchBar ?: searchBar
+    }
 }
 
 @Composable
@@ -157,6 +146,7 @@ fun Navigation() {
     val scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
 
+    // Navigation states
     val menuOptions = remember { listOf(
         /* All screens */
         Screen.Tasks(),
@@ -169,9 +159,8 @@ fun Navigation() {
         Screen.Tasks()
     ) }
 
-    val loadingBar = remember { mutableStateOf(false) }
-
-    /* Utility method in navigation */
+    /* Create ViewModel containing navigation callbacks, populate it once */
+    val loadingBar = remember { LoadingBar() }
     val navigateTo: (Screen) -> Unit = remember { { screen ->
         currentMenuOption = screen
 
@@ -179,25 +168,26 @@ fun Navigation() {
         if (scaffoldState.drawerState.isOpen)
             scope.launch { scaffoldState.drawerState.close() }
     } }
+    val searchBar = remember { SearchBar() }
 
-    /* Create ViewModel containing navigation callbacks */
-    val viewModel : UiContextViewModel = viewModel()
-    viewModel.setNav(Navigator(
-        push = { screen ->
-            navigateTo(
-                Screen.Custom(
-                    title = screen.title,
-                    content = screen.content,
-                    onBack = currentMenuOption
+    val viewModel: UIContextViewModel = viewModel()
+    LaunchedEffect(viewModel) {
+        viewModel.setNav(Navigator(
+            push = { screen ->
+                navigateTo(
+                    Screen.Custom(
+                        title = screen.title,
+                        content = screen.content,
+                        onBack = currentMenuOption
+                    )
                 )
-            )
-        },
-        pop = { currentMenuOption.onBack?.let { screen -> navigateTo(screen) } },
-        set = { screen -> currentMenuOption = screen }
-    ))
-    viewModel.setLoadingBar(LoadingBar(
-        _enabled = loadingBar
-    ))
+            },
+            pop = { currentMenuOption.onBack?.let { screen -> navigateTo(screen) } },
+            set = { screen -> currentMenuOption = screen }
+        ))
+        viewModel.setLoadingBar(loadingBar)
+        viewModel.setSearchBar(searchBar)
+    }
 
     /* Log out modal dialog */
     var openLogoutDialog by remember { mutableStateOf(false) }
@@ -207,7 +197,6 @@ fun Navigation() {
             title = { Text(text = "Are you sure?") },
             text = { Text("Your local data will be cleared") },
             buttons = {
-
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -225,6 +214,23 @@ fun Navigation() {
         )
     }
 
+    /* Dispatch on back button pressed */
+    val focusManager = LocalFocusManager.current
+    BackHandler {
+        /* Do clear focus of everything, in any case */
+        focusManager.clearFocus()
+
+        if (openLogoutDialog) {
+            openLogoutDialog = false
+        } else if (scaffoldState.drawerState.isOpen) {
+            scope.launch { scaffoldState.drawerState.close() }
+        } else if (currentMenuOption.onBack != null) {
+            navigateTo(currentMenuOption.onBack!!)
+        } else {
+            /* TODO: exit application */
+        }
+    }
+
     Scaffold(
         scaffoldState = scaffoldState,
         drawerContent = {
@@ -240,27 +246,57 @@ fun Navigation() {
             }
         },
         topBar = {
-            TopAppBar(
-                title = { Text(currentMenuOption.title) },
-                navigationIcon = {
-                    when (currentMenuOption.onBack) {
-                        null -> IconButton(
-                            onClick = { scope.launch {
-                                scaffoldState.drawerState.open()
-                            } },
-                            content = { Icon(Icons.Filled.Menu, contentDescription = "Localized description") }
-                        )
-                        else -> {
-                            IconButton(
-                                onClick = { currentMenuOption = currentMenuOption.onBack!! },
-                                content = { Icon(Icons.Filled.ArrowBack, contentDescription = "Localized description") }
-                            )
-                        }
-                    }
+            Column {
+                if (loadingBar.enabled) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }
-            )
-            if (loadingBar.value) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .background(MaterialTheme.colors.onBackground)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    val shape = RoundedCornerShape(32.dp)
+                    TextField(
+                        value = searchBar.query,
+                        onValueChange = { searchBar.query = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colors.background, shape),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                focusManager.clearFocus()
+                            }
+                        ),
+                        singleLine = true,
+                        placeholder = { Text(currentMenuOption.title) },
+                        shape = shape,
+                        leadingIcon = {
+                            /* We implant the app bar's navigation icon here */
+                            when (currentMenuOption.onBack) {
+                                null -> IconButton(
+                                    onClick = {
+                                        scope.launch {
+                                            scaffoldState.drawerState.open()
+                                        }
+                                    },
+                                    content = {
+                                        Icon(Icons.Filled.Menu, contentDescription = "Localized description")
+                                    }
+                                )
+                                else -> {
+                                    IconButton(
+                                        onClick = { currentMenuOption = currentMenuOption.onBack!! },
+                                        content = {
+                                            Icon( Icons.Filled.ArrowBack, contentDescription = "Localized description" )
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    )
+                }
             }
         },
         floatingActionButtonPosition = FabPosition.End,
@@ -280,15 +316,6 @@ fun Navigation() {
             }
         }
     )
-
-    // make sure back presses are handled correctly
-    if (openLogoutDialog) {
-        BackHandler { openLogoutDialog = false }
-    } else if (scaffoldState.drawerState.isOpen) {
-        BackHandler { scope.launch { scaffoldState.drawerState.close() } }
-    } else if (currentMenuOption.onBack != null) {
-        BackHandler { navigateTo(currentMenuOption.onBack!!) }
-    }
 }
 
 @Composable

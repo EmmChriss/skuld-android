@@ -35,7 +35,7 @@ import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.lab.skuld.ui.Screen
-import com.lab.skuld.ui.UiContextViewModel
+import com.lab.skuld.ui.UIContextViewModel
 import com.lab.skuld.ui.rememberLiveArray
 
 
@@ -70,7 +70,7 @@ fun maybeToTask(maybe: MaybeTask) =
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ShowTasksScreen() {
-    val uiContextViewModel: UiContextViewModel = viewModel()
+    val uiContextViewModel: UIContextViewModel = viewModel()
     LaunchedEffect(Unit) {
         uiContextViewModel.loadingBar.enabled = true
     }

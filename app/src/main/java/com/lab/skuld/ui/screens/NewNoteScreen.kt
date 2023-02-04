@@ -44,7 +44,7 @@ import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.lab.skuld.ui.Screen
-import com.lab.skuld.ui.UiContextViewModel
+import com.lab.skuld.ui.UIContextViewModel
 import java.util.Date
 
 
@@ -137,7 +137,7 @@ fun ShowNewNoteScreen(documentt: Event = emptyEventorTask){
         isNewTask = true
     }
     val document = eventToDocument(documentt)
-    val viewModel: UiContextViewModel = viewModel()
+    val viewModel: UIContextViewModel = viewModel()
 
 
     var newHeader by remember { mutableStateOf("") }
