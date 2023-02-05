@@ -32,6 +32,7 @@ import com.google.firebase.ktx.Firebase
 import com.lab.skuld.model.Event
 import com.lab.skuld.model.MaybeEvent
 import com.lab.skuld.model.maybeToEvent
+import com.lab.skuld.ui.Screen
 import com.lab.skuld.ui.UIContextViewModel
 import com.lab.skuld.ui.rememberLiveArray
 import com.lab.skuld.ui.widget.Calendar
@@ -126,7 +127,7 @@ fun ShowCalendarScreen() {
     }
 
     fun dateToIdx(date: LocalDate): Int? =
-        headerIndexes.first[calendarState.selectedDate]
+        headerIndexes.first[date]
 
     fun idxToDate(idx: Int): LocalDate? =
         headerIndexes.second.lastOrNull {
@@ -152,7 +153,7 @@ fun ShowCalendarScreen() {
         }
     }
 
-    LaunchedEffect(visibleItem) {
+    LaunchedEffect(visibleItem, aggregatedEvents) {
         if (animationState)
             return@LaunchedEffect
 
@@ -184,7 +185,7 @@ fun ShowCalendarScreen() {
                     key = { Pair(it.event, it.shownOn) },
                     contentType = { "ITEM" }
                 ) {
-                    ShowEvent(entry.key, it)
+                    ShowEvent(entry.key, it, uiContextViewModel)
                 }
             }
 
@@ -199,8 +200,9 @@ fun ShowCalendarScreen() {
 
 fun formatTime(t: LocalTime): String = t.toJavaLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun ShowEvent(calendarHeader: CalendarHeader, calendarEvent: CalendarShownEvent) {
+fun ShowEvent(calendarHeader: CalendarHeader, calendarEvent: CalendarShownEvent, uiContextViewModel: UIContextViewModel) {
     val evt = calendarEvent.event
     Box(
         modifier = Modifier
@@ -208,10 +210,11 @@ fun ShowEvent(calendarHeader: CalendarHeader, calendarEvent: CalendarShownEvent)
             .wrapContentHeight()
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
-        Card(
+        Card (
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight(),
+            onClick = { uiContextViewModel.nav.push(Screen.TaskP(calendarEvent.event)) },
             elevation = 4.dp
         ) {
             Row(
