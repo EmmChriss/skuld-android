@@ -24,6 +24,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
@@ -91,22 +92,30 @@ fun Auth(content: @Composable () -> Unit) {
 
 }
 
-sealed class Screen(val title: String, val content: @Composable () -> Unit, val onBack: Screen? = null ) {
+sealed class Screen(
+    val title: String,
+    val content: @Composable () -> Unit,
+    val onBack: Screen? = null,
+    val searchBarShown: Boolean = true
+) {
     class Custom(
         title: String,
         content: @Composable () -> Unit,
-        onBack: Screen?
-    ) : Screen(title, content, onBack)
+        onBack: Screen?,
+        searchBarShown: Boolean
+    ) : Screen(title, content, onBack, searchBarShown)
 
     class NewTask(document: Event = emptyEventOrTask) : Screen(
         title = "New Task",
         content = { ShowNewNoteScreen(document) },
-        onBack = Tasks()
+        onBack = Tasks(),
+        searchBarShown = false
     )
     class TaskP(event: Event) : Screen(
         title = "Task",
         content = { ShowNoteScreen(event)},
-        onBack = Tasks()
+        onBack = Tasks(),
+        searchBarShown = false
     )
     class Tasks : Screen(
         title = "Tasks",
@@ -120,8 +129,8 @@ sealed class Screen(val title: String, val content: @Composable () -> Unit, val 
 
     class Settings() : Screen(
         title = "Settings",
-        content = { ShowSettingsScreen()},
-        //onBack =
+        content = { ShowSettingsScreen() },
+        searchBarShown = false
     )
 }
 
@@ -203,7 +212,8 @@ fun Navigation() {
                     Screen.Custom(
                         title = screen.title,
                         content = screen.content,
-                        onBack = currentMenuOption.onBack
+                        onBack = currentMenuOption.onBack,
+                        searchBarShown = screen.searchBarShown
                     )
                 )
             },
@@ -212,7 +222,8 @@ fun Navigation() {
                     Screen.Custom(
                         title = screen.title,
                         content = screen.content,
-                        onBack = currentMenuOption
+                        onBack = currentMenuOption,
+                        searchBarShown = screen.searchBarShown
                     )
                 )
             },
@@ -280,57 +291,86 @@ fun Navigation() {
             }
         },
         topBar = {
-            Column {
+            @Composable
+            fun navigationIcon() =
+                when (currentMenuOption.onBack) {
+                    null -> IconButton(
+                        onClick = {
+                            scope.launch {
+                                scaffoldState.drawerState.open()
+                            }
+                        },
+                        content = {
+                            Icon(Icons.Filled.Menu, contentDescription = "Localized description")
+                        }
+                    )
+
+                    else -> {
+                        IconButton(
+                            onClick = { currentMenuOption = currentMenuOption.onBack!! },
+                            content = {
+                                Icon(
+                                    Icons.Filled.ArrowBack,
+                                    contentDescription = "Localized description"
+                                )
+                            }
+                        )
+                    }
+                }
+
+            @Composable
+            fun loadingBar() {
                 if (loadingBar.enabled) {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight()
-                        .background(MaterialTheme.colors.onBackground)
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    val shape = RoundedCornerShape(32.dp)
-                    TextField(
-                        value = searchBar.query,
-                        onValueChange = { searchBar.query = it },
+            }
+
+            @Composable
+            fun topAppBar() {
+                TopAppBar(
+                    title = {
+                        Text(currentMenuOption.title)
+                        loadingBar()
+                    },
+                    navigationIcon = { navigationIcon() },
+                )
+            }
+
+            @Composable
+            fun searchBarAppBar() {
+                Column {
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(MaterialTheme.colors.background, shape),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                focusManager.clearFocus()
-                            }
-                        ),
-                        singleLine = true,
-                        placeholder = { Text(currentMenuOption.title) },
-                        shape = shape,
-                        leadingIcon = {
-                            /* We implant the app bar's navigation icon here */
-                            when (currentMenuOption.onBack) {
-                                null -> IconButton(
-                                    onClick = {
-                                        scope.launch {
-                                            scaffoldState.drawerState.open()
-                                        }
-                                    },
-                                    content = {
-                                        Icon(Icons.Filled.Menu, contentDescription = "Localized description")
-                                    }
-                                )
-                                else -> {
-                                    IconButton(
-                                        onClick = { currentMenuOption = currentMenuOption.onBack!! },
-                                        content = {
-                                            Icon( Icons.Filled.ArrowBack, contentDescription = "Localized description" )
-                                        }
-                                    )
+                            .wrapContentHeight()
+                            .background(MaterialTheme.colors.onBackground)
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        val shape = RoundedCornerShape(32.dp)
+                        TextField(
+                            value = searchBar.query,
+                            onValueChange = { searchBar.query = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colors.background, shape),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    focusManager.clearFocus()
                                 }
-                            }
-                        }
-                    )
+                            ),
+                            singleLine = true,
+                            placeholder = { Text(currentMenuOption.title) },
+                            shape = shape,
+                            leadingIcon = { navigationIcon() }
+                        )
+                    }
                 }
+            }
+
+            if (currentMenuOption.searchBarShown) {
+                searchBarAppBar()
+            } else {
+                topAppBar()
             }
         },
         floatingActionButtonPosition = FabPosition.End,
