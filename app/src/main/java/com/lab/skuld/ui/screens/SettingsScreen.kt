@@ -25,6 +25,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
+import com.lab.skuld.model.CreateEvent
 import com.lab.skuld.ui.UIContextViewModel
 import com.lab.skuld.ui.rememberLiveArray
 import org.json.JSONArray
@@ -129,7 +130,7 @@ fun ImportButton() {
         val tasksJson = file.readText()
         val tasks = gson.fromJson(tasksJson, Array<Task>::class.java)
         val eventNoIDs = tasks.map { task ->
-            EventNoID(
+            CreateEvent(
                 startDate = null,
                 endDate = null,
                 title = task.title,
