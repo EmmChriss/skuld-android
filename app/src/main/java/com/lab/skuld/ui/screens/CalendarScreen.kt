@@ -16,9 +16,13 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -35,10 +39,12 @@ import com.lab.skuld.ui.rememberLiveArray
 import com.lab.skuld.ui.widget.Calendar
 import com.lab.skuld.ui.widget.CalendarState
 import com.lab.skuld.ui.widget.rememberCalendarState
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
+import kotlinx.datetime.daysUntil
 import kotlinx.datetime.plus
 import kotlinx.datetime.toJavaLocalTime
 import java.time.format.DateTimeFormatter
@@ -125,24 +131,32 @@ fun ShowCalendarScreen() {
     }
 
     val scrollState = rememberLazyListState()
+
+    var animationState: String? by remember { mutableStateOf(null) }
     LaunchedEffect(calendarState.selectedDate) {
         val idx = headerIndexes.first[calendarState.selectedDate]
-        if (idx != null) {
+        if (idx != null && animationState == null) {
+            animationState = "scroll"
             scrollState.animateScrollToItem(idx)
+            animationState = null
+        } else if (animationState == "set") {
+            animationState = null
         }
     }
 
-    val firstVisibleHeader by remember {
-        derivedStateOf(structuralEqualityPolicy()) {
+    val firstVisibleHeaderFlow = remember {
+        snapshotFlow {
             var firstVisibleItem = scrollState.firstVisibleItemIndex
             headerIndexes.second.lastOrNull {
                 firstVisibleItem >= it.first
             }?.second
         }
     }
+    val firstVisibleHeader by firstVisibleHeaderFlow.collectAsState(null)
 
     LaunchedEffect(firstVisibleHeader) {
-        if (firstVisibleHeader != null) {
+        if (firstVisibleHeader != null && animationState == null) {
+            animationState = "set"
             calendarState.selectedDate = firstVisibleHeader!!
             calendarState.visibleDate = firstVisibleHeader!!
         }

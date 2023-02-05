@@ -39,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -69,8 +70,8 @@ enum class CalendarType {
 
 class CalendarState(defaultDate: LocalDate?) {
     val today: LocalDate = Clock.System.todayIn(TimeZone.currentSystemDefault())
-    var selectedDate by mutableStateOf(defaultDate ?: today)
-    var visibleDate by mutableStateOf(defaultDate ?: today)
+    var selectedDate by mutableStateOf(defaultDate ?: today, structuralEqualityPolicy())
+    var visibleDate by mutableStateOf(defaultDate ?: today, structuralEqualityPolicy())
     var calendarType by mutableStateOf(CalendarType.WEEKLY)
 
     val calendarInterval get() = when (calendarType) {
