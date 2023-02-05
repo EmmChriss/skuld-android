@@ -32,14 +32,8 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.lab.skuld.ui.Screen
 import com.lab.skuld.ui.UIContextViewModel
+import com.lab.skuld.model.Event
 
-//import com.lab.skuld.ui.Event
-
-
-
-
-
-//data class TextData(var index: Int, var header: String, var value: String)
 @Composable
 fun ShowNoteScreen(documentt: Event) {
     val document = eventToDocument(documentt)
@@ -55,14 +49,7 @@ fun ShowNoteScreen(documentt: Event) {
     Column(modifier = Modifier
         .padding(16.dp)
         .fillMaxWidth()) {
-
-
-
-
     }
-
-
-
 
    Column(modifier = Modifier
        .padding(16.dp)
@@ -71,7 +58,6 @@ fun ShowNoteScreen(documentt: Event) {
        {
 
        Text(
-
            text = document.header,
            fontWeight = FontWeight.Bold,
            fontSize = 35.sp,
@@ -81,15 +67,14 @@ fun ShowNoteScreen(documentt: Event) {
        )
        Spacer(modifier = Modifier.padding(10.dp))
         for (data in textElementsValues) {
-            Spacer(modifier = Modifier.padding(10.dp))
+        Spacer(modifier = Modifier.padding(10.dp))
             Column(modifier = Modifier
                 .background(color = MaterialTheme.colors.primary, shape = RoundedCornerShape(10.dp))
                 .wrapContentSize(Alignment.Center)
                 .align(Alignment.CenterHorizontally)
                 .fillMaxWidth()
                 .padding(10.dp)
-            )
-            {
+            ) {
                 Text(
                     color = MaterialTheme.colors.onPrimary,
                     text = data.header,
@@ -109,25 +94,15 @@ fun ShowNoteScreen(documentt: Event) {
                 )
             }
         }
-           Spacer(modifier = Modifier.padding(20.dp))
-       Button(onClick = {
-
+        Spacer(modifier = Modifier.padding(20.dp))
+        Button(onClick = {
            viewModel.nav.push(Screen.NewTask(documentt))
-
-
        }) {
            Text("EDIT")
-
        }
        DeleteElementDialog(documentt.id)
-
-
-
-
     }
 }
-
-
 
 @Composable
 fun DeleteElementDialog(taskID : String) {
@@ -174,6 +149,7 @@ fun DeleteElementDialog(taskID : String) {
                             }
                             .addOnFailureListener {
                                 // Delete failed
+                                /* TODO: show snackbar of failure */
                             }
 
                     },
