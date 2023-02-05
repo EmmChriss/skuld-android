@@ -30,14 +30,16 @@ import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
 import com.lab.skuld.model.CreateEvent
 import com.lab.skuld.model.Event
-import com.lab.skuld.model.MaybeEvent
-import com.lab.skuld.model.maybeToEvent
 import com.lab.skuld.ui.UIContextViewModel
 import com.lab.skuld.ui.rememberLiveArray
 import com.lab.skuld.ui.theme.ClownColorPalette
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
+
+
+
+
 
 @Composable
 fun ShowSettingsScreen() {
@@ -96,21 +98,21 @@ fun ExportButton() {
     val context = LocalContext.current
     val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "export.json")
     val query = Firebase.firestore.collection("users/data/${Firebase.auth.currentUser!!.uid}")
-    val documents: List<Event> by rememberLiveArray(
-        MaybeEvent::class.java,
+    val documents: List<Task> by rememberLiveArray(
+        MaybeTask::class.java,
         query,
-        ::maybeToEvent,
+        ::maybeToTask,
     )
     val resultMessage = remember { mutableStateOf("") }
-
     Button(onClick = {
         val jsonArray = JSONArray()
 
+        Log.i(TAG, documents.toString())
         for (document in documents) {
             val jsonObject = JSONObject()
             jsonObject.put("id", document.id)
-            jsonObject.put("startDate", document.startDate)
-            jsonObject.put("endDate", document.endDate)
+            //jsonObject.put("startDate", document.startDate)
+            //jsonObject.put("endDate", document.endDate)
             jsonObject.put("title", document.title)
             jsonObject.put("checked", document.checked)
             jsonObject.put("contents", document.contents)
@@ -127,7 +129,7 @@ fun ExportButton() {
     }
     Text(resultMessage.value)
 }
-
+/*
 @Composable
 fun ImportButton() {
     val context = LocalContext.current
@@ -141,7 +143,7 @@ fun ImportButton() {
         val eventNoIDs = events.map { event ->
             CreateEvent(
                 startDate = event.startDate,
-                endDate = event.endDate,
+                endDate = event.startDate,
                 title = event.title,
                 checked = event.checked,
                 contents = event.contents
@@ -168,7 +170,48 @@ fun ImportButton() {
     Text(resultMessage.value)
 }
 
+*/
 
+
+@Composable
+fun ImportButton() {
+    val context = LocalContext.current
+    val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "export.json")
+    val gson = Gson()
+    val resultMessage = remember { mutableStateOf("") }
+
+    Button(onClick = {
+        val eventsJson = file.readText()
+        val events = gson.fromJson(eventsJson, Array<Event>::class.java)
+        val eventNoIDs = events.map { event ->
+            CreateEvent(
+                startDate = null,
+                endDate = null,
+                title = event.title,
+                checked = event.checked,
+                contents = event.contents
+            )
+        }
+
+        for(event in eventNoIDs) {
+            Firebase.firestore
+                .collection("users/data/${Firebase.auth.currentUser!!.uid}")
+                .document()
+                .set(event)
+                .addOnSuccessListener {
+                    Log.i(TAG, "Upload Success")
+                }
+                .addOnFailureListener {
+                    Log.w(TAG, "Upload Failed")
+                }
+        }
+
+        resultMessage.value = "Imported from ${file.absolutePath}"
+    }) {
+        Text("IMPORT")
+    }
+    Text(resultMessage.value)
+}
 @Composable
 fun RadioButtonsThemes() {
     val uiContextViewModel: UIContextViewModel = viewModel()

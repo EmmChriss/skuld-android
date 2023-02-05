@@ -18,16 +18,16 @@ class MaybeEvent {
 
 data class Event(
     val id: String,
-    val startDate: LocalDateTime?,
-    val endDate: LocalDateTime?,
+    val startDate: LocalDateTime?= null,
+    val endDate: LocalDateTime?= null,
     val title: String,
     val checked: Boolean?,
     val contents: String?,
 )
 
 data class CreateEvent(
-    val startDate: LocalDateTime?,
-    val endDate: LocalDateTime?,
+    var startDate: LocalDateTime?= null,
+    var endDate: LocalDateTime?= null,
     val title: String,
     val checked: Boolean?,
     val contents: String?,

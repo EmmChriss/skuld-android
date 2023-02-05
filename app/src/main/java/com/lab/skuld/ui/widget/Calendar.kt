@@ -221,10 +221,10 @@ fun DayButton(state: CalendarState, date: LocalDate, background: Boolean = false
         textColor = MaterialTheme.colors.onPrimary.copy(alpha = backgroundAlpha)
     } else if (date == state.selectedDate) {
         backgroundColor = MaterialTheme.colors.primary.copy(alpha = backgroundAlpha)
-        textColor = MaterialTheme.colors.onPrimary.copy(alpha = backgroundAlpha)
+        textColor = MaterialTheme.colors.onBackground.copy(alpha = backgroundAlpha)
     } else {
         backgroundColor = Color.Unspecified
-        textColor = MaterialTheme.colors.onPrimary.copy(alpha = backgroundAlpha)
+        textColor = MaterialTheme.colors.onBackground.copy(alpha = backgroundAlpha)
     }
 
     IconButton(

@@ -1,6 +1,5 @@
 package com.lab.skuld.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,7 +22,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -37,14 +35,11 @@ import com.lab.skuld.model.maybeToEvent
 import com.lab.skuld.ui.UIContextViewModel
 import com.lab.skuld.ui.rememberLiveArray
 import com.lab.skuld.ui.widget.Calendar
-import com.lab.skuld.ui.widget.CalendarState
 import com.lab.skuld.ui.widget.rememberCalendarState
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
-import kotlinx.datetime.daysUntil
 import kotlinx.datetime.plus
 import kotlinx.datetime.toJavaLocalTime
 import java.time.format.DateTimeFormatter
@@ -96,8 +91,8 @@ fun ShowCalendarScreen() {
                     var currentDate = it.startDate!!.date
                     while (currentDate <= it.endDate!!.date) {
                         val associatedDateTime = when {
-                            it.startDate.date == currentDate -> it.startDate.time
-                            it.endDate.date == currentDate -> it.endDate.time
+                            it.startDate!!.date == currentDate -> it.startDate!!.time
+                            it.endDate!!.date == currentDate -> it.endDate!!.time
                             else -> null
                         }
                         this.add(CalendarShownEvent(it, currentDate, associatedDateTime))
