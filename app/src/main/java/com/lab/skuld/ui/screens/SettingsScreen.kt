@@ -26,6 +26,7 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
 import com.lab.skuld.model.CreateEvent
+import com.lab.skuld.model.Event
 import com.lab.skuld.ui.UIContextViewModel
 import com.lab.skuld.ui.rememberLiveArray
 import org.json.JSONArray
@@ -127,15 +128,15 @@ fun ImportButton() {
     val resultMessage = remember { mutableStateOf("") }
 
     Button(onClick = {
-        val tasksJson = file.readText()
-        val tasks = gson.fromJson(tasksJson, Array<Task>::class.java)
-        val eventNoIDs = tasks.map { task ->
+        val eventsJson = file.readText()
+        val events = gson.fromJson(eventsJson, Array<Event>::class.java)
+        val eventNoIDs = events.map { event ->
             CreateEvent(
-                startDate = null,
-                endDate = null,
-                title = task.title,
-                checked = task.checked,
-                contents = task.contents
+                startDate = event.startDate,
+                endDate = event.endDate,
+                title = event.title,
+                checked = event.checked,
+                contents = event.contents
             )
         }
 
