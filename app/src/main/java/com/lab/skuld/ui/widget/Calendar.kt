@@ -1,6 +1,5 @@
 package com.lab.skuld.ui.widget
 
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
@@ -14,17 +13,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -224,13 +218,13 @@ fun DayButton(state: CalendarState, date: LocalDate, background: Boolean = false
     var textColor: Color
     if (date == state.today) {
         backgroundColor = MaterialTheme.colors.secondary.copy(alpha = backgroundAlpha)
-        textColor = MaterialTheme.colors.primaryVariant.copy(alpha = backgroundAlpha)
+        textColor = MaterialTheme.colors.onPrimary.copy(alpha = backgroundAlpha)
     } else if (date == state.selectedDate) {
         backgroundColor = MaterialTheme.colors.primary.copy(alpha = backgroundAlpha)
-        textColor = MaterialTheme.colors.primaryVariant.copy(alpha = backgroundAlpha)
+        textColor = MaterialTheme.colors.onBackground.copy(alpha = backgroundAlpha)
     } else {
         backgroundColor = Color.Unspecified
-        textColor = MaterialTheme.colors.primary.copy(alpha = backgroundAlpha)
+        textColor = MaterialTheme.colors.onBackground.copy(alpha = backgroundAlpha)
     }
 
     IconButton(

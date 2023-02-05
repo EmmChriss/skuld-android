@@ -343,7 +343,7 @@ fun Navigation() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .wrapContentHeight()
-                            .background(MaterialTheme.colors.onBackground)
+                            .background(MaterialTheme.colors.primary)
                             .padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
                         val shape = RoundedCornerShape(32.dp)

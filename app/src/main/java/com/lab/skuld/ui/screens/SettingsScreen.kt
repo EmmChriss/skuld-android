@@ -13,12 +13,14 @@ import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.RadioButton
 import androidx.compose.material.Text
+import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -28,13 +30,16 @@ import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
 import com.lab.skuld.model.CreateEvent
 import com.lab.skuld.model.Event
-import com.lab.skuld.model.MaybeEvent
-import com.lab.skuld.model.maybeToEvent
 import com.lab.skuld.ui.UIContextViewModel
 import com.lab.skuld.ui.rememberLiveArray
+import com.lab.skuld.ui.theme.ClownColorPalette
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
+
+
+
+
 
 @Composable
 fun ShowSettingsScreen() {
@@ -93,21 +98,21 @@ fun ExportButton() {
     val context = LocalContext.current
     val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "export.json")
     val query = Firebase.firestore.collection("users/data/${Firebase.auth.currentUser!!.uid}")
-    val documents: List<Event> by rememberLiveArray(
-        MaybeEvent::class.java,
+    val documents: List<Task> by rememberLiveArray(
+        MaybeTask::class.java,
         query,
-        ::maybeToEvent,
+        ::maybeToTask,
     )
     val resultMessage = remember { mutableStateOf("") }
-
     Button(onClick = {
         val jsonArray = JSONArray()
 
+        Log.i(TAG, documents.toString())
         for (document in documents) {
             val jsonObject = JSONObject()
             jsonObject.put("id", document.id)
-            jsonObject.put("startDate", document.startDate)
-            jsonObject.put("endDate", document.endDate)
+            //jsonObject.put("startDate", document.startDate)
+            //jsonObject.put("endDate", document.endDate)
             jsonObject.put("title", document.title)
             jsonObject.put("checked", document.checked)
             jsonObject.put("contents", document.contents)
@@ -124,7 +129,7 @@ fun ExportButton() {
     }
     Text(resultMessage.value)
 }
-
+/*
 @Composable
 fun ImportButton() {
     val context = LocalContext.current
@@ -138,7 +143,7 @@ fun ImportButton() {
         val eventNoIDs = events.map { event ->
             CreateEvent(
                 startDate = event.startDate,
-                endDate = event.endDate,
+                endDate = event.startDate,
                 title = event.title,
                 checked = event.checked,
                 contents = event.contents
@@ -165,11 +170,52 @@ fun ImportButton() {
     Text(resultMessage.value)
 }
 
+*/
 
+
+@Composable
+fun ImportButton() {
+    val context = LocalContext.current
+    val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "export.json")
+    val gson = Gson()
+    val resultMessage = remember { mutableStateOf("") }
+
+    Button(onClick = {
+        val eventsJson = file.readText()
+        val events = gson.fromJson(eventsJson, Array<Event>::class.java)
+        val eventNoIDs = events.map { event ->
+            CreateEvent(
+                startDate = null,
+                endDate = null,
+                title = event.title,
+                checked = event.checked,
+                contents = event.contents
+            )
+        }
+
+        for(event in eventNoIDs) {
+            Firebase.firestore
+                .collection("users/data/${Firebase.auth.currentUser!!.uid}")
+                .document()
+                .set(event)
+                .addOnSuccessListener {
+                    Log.i(TAG, "Upload Success")
+                }
+                .addOnFailureListener {
+                    Log.w(TAG, "Upload Failed")
+                }
+        }
+
+        resultMessage.value = "Imported from ${file.absolutePath}"
+    }) {
+        Text("IMPORT")
+    }
+    Text(resultMessage.value)
+}
 @Composable
 fun RadioButtonsThemes() {
     val uiContextViewModel: UIContextViewModel = viewModel()
-    val radioOptions = listOf("System theme","Light", "Dark", "C for 'Coming soon'")
+    val radioOptions = listOf("System theme","Light", "Dark", "Clown")
 
     fun onOptionSelected(text: String) {
         when (text) {
@@ -182,8 +228,21 @@ fun RadioButtonsThemes() {
             "Dark" -> {
                 uiContextViewModel.theme = "Dark"
             }
-            "C for 'Coming soon'" -> {
-                uiContextViewModel.theme = "C for 'Coming soon'"
+            "Clown" -> {
+                val randomNextInt = { max: Int -> (Math.random() * max).toInt() }
+                ClownColorPalette = lightColors(
+                    primary = Color(-0x1000000 or randomNextInt(0xFFFFFF)),
+                    primaryVariant = Color(-0x1000000 or randomNextInt(0xFFFFFF)),
+                    secondary = Color(-0x1000000 or randomNextInt(0xFFFFFF)),
+                    secondaryVariant = Color(-0x1000000 or randomNextInt(0xFFFFFF)),
+                    background = Color.White,
+                    surface = Color.White,
+                    onPrimary = Color(0xFFffffff),
+                    onSecondary = Color(0xFFffffff),
+                    onBackground = Color.Black,
+                    onSurface = Color.Black,
+                )
+                uiContextViewModel.theme = "Clown"
             }
         }
     }

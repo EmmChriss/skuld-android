@@ -1,5 +1,8 @@
 package com.lab.skuld.ui.screens
 
+import android.app.DatePickerDialog
+import android.icu.util.Calendar
+import android.widget.DatePicker
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Surface
@@ -28,21 +32,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.lab.skuld.model.CreateEvent
 import com.lab.skuld.model.Event
+import com.lab.skuld.model.dateTimeToTimestamp
 import com.lab.skuld.ui.Screen
 import com.lab.skuld.ui.UIContextViewModel
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import java.util.Date
 
 fun eventToDocument(event: Event): Document {
     val lines = event.contents?.split("\n") ?: emptyList()
@@ -63,6 +71,17 @@ fun documentToEvent(document: Document): Event {
 fun documentToEventNoID(document: Document): CreateEvent {
     val contents = document.documentContents.joinToString("\n") { data -> "${data.header} ${data.value}" }
     return CreateEvent( startDate = null, endDate = null, title = document.header, checked = true, contents = contents)
+}
+data class MaybeEventNoID (
+    var startDate: Timestamp? = null,
+    var endDate: Timestamp? = null,
+    val title: String? = null,
+    val checked: Boolean? = null,
+    val contents: String? = null,
+)
+fun documentToEventNoID2(document: Document): MaybeEventNoID {
+    val contents = document.documentContents.joinToString("\n") { data -> "${data.header} ${data.value}" }
+    return MaybeEventNoID( startDate = null, endDate = null, title = document.header, checked = true, contents = contents)
 }
 fun now(): LocalDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 
@@ -91,6 +110,8 @@ fun ShowNewNoteScreen(event: Event = emptyEventOrTask){
     var newHeader by remember { mutableStateOf("") }
     var documentTitle by remember { mutableStateOf("") }
     val textElementsValues = remember { mutableStateListOf<TextData>() }
+    var startDate by remember { mutableStateOf("") }
+    var endDate by remember { mutableStateOf("") }
 
     val preList = mutableListOf<TextData>()
     if(document.documentContents.isNotEmpty() and textElementsValues.isEmpty()) {
@@ -138,7 +159,7 @@ fun ShowNewNoteScreen(event: Event = emptyEventOrTask){
                     dismissButton = {
                         TextButton(
                             onClick = { isDialogVisible = false },
-                            content = { Text("nevermind") },
+                            content = { Text("nevermind", color = MaterialTheme.colors.onSecondary) },
                         )
                     },
                     confirmButton = {
@@ -165,13 +186,13 @@ fun ShowNewNoteScreen(event: Event = emptyEventOrTask){
             val header = textData.header
             val value = textData.value
             if(index>-1) {
-                Text(header, modifier = Modifier.padding(5.dp), fontSize = 20.sp)
+                Text(header, modifier = Modifier.padding(5.dp), fontSize = 20.sp, color = MaterialTheme.colors.onPrimary)
                 TextField(
                     value = value,
                     onValueChange = {
                         textElementsValues[index] = textElementsValues[index].copy(value = it)
                     },
-                    label = { Text("Content") },
+                    label = { Text("Content", color = MaterialTheme.colors.onBackground) },
                     modifier = Modifier
                         .clip(RoundedCornerShape(10.dp)),
 
@@ -184,7 +205,9 @@ fun ShowNewNoteScreen(event: Event = emptyEventOrTask){
                         Text(
                             "Delete element",
                             modifier = Modifier.padding(2.dp),
-                            fontSize = 10.sp
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colors.onBackground
+
                         )
                     },
                 )
@@ -199,7 +222,7 @@ fun ShowNewNoteScreen(event: Event = emptyEventOrTask){
             onValueChange = {
                 documentTitle = it
             },
-            label = { Text("Title") },
+            label = { Text("Title", color = MaterialTheme.colors.onBackground) },
             modifier = Modifier
                 .padding(10.dp)
                 .align(Alignment.CenterHorizontally)
@@ -216,9 +239,30 @@ fun ShowNewNoteScreen(event: Event = emptyEventOrTask){
 
 
         NewElementDialog()
+        Spacer(modifier = Modifier.padding(10.dp))
+        Text("select dates(optional)", modifier = Modifier.padding(1.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(2.dp),
+            verticalAlignment = Alignment.CenterVertically
 
-
-
+        ) {
+            Column (verticalArrangement = Arrangement.Center){
+                startDate = datePickerButton("Start date")
+                Spacer(modifier = Modifier.padding(1.dp))
+                Text(startDate)
+            }
+            Spacer(modifier = Modifier.padding(10.dp))
+            Column (verticalArrangement = Arrangement.Center){
+                endDate = datePickerButton("End date")
+                Spacer(modifier = Modifier.padding(1.dp))
+                Text(endDate)
+            }
+            //startDate = datePickerButton("Start date")
+            //endDate = datePickerButton("End date")
+        }
+        Spacer(modifier = Modifier.padding(10.dp))
         var saveText = "Save"
         Button(onClick = {
 
@@ -231,7 +275,15 @@ fun ShowNewNoteScreen(event: Event = emptyEventOrTask){
             saveText = "Save"
             if(isNewTask){
                 document.checked = false
-                val eventNoID = documentToEventNoID(document)
+                var eventNoID = documentToEventNoID2(document)
+                //eventNoID.startDate = //startDate
+                //eventNoID.endDate = endDate
+                var dateSpliced = startDate.split("-")
+                eventNoID.startDate = dateTimeToTimestamp(LocalDateTime(dateSpliced[0].toInt(), dateSpliced[1].toInt(), dateSpliced[2].toInt(), 1, 1))
+                dateSpliced = endDate.split("-")
+                eventNoID.endDate = dateTimeToTimestamp(LocalDateTime(dateSpliced[0].toInt(), dateSpliced[1].toInt(), dateSpliced[2].toInt(), 1, 1))
+
+
                 Firebase.firestore
                     .collection("users/data/${Firebase.auth.currentUser!!.uid}")
                     .document()
@@ -244,6 +296,8 @@ fun ShowNewNoteScreen(event: Event = emptyEventOrTask){
                     }
             }else{
                 val documentUp = documentToEventNoID(document)
+                //documentUp.startDate = startDate
+                //documentUp.endDate = endDate
                 Firebase.firestore
                     .collection("users/data/${Firebase.auth.currentUser!!.uid}")
                     .document(event.id)
@@ -263,6 +317,44 @@ fun ShowNewNoteScreen(event: Event = emptyEventOrTask){
     }
 }
 
+
+@Composable
+fun datePickerButton(buttonText: String): String{
+
+    val mContext = LocalContext.current
+
+    val mYear: Int
+    val mMonth: Int
+    val mDay: Int
+
+    val mCalendar = Calendar.getInstance()
+
+    mYear = mCalendar.get(Calendar.YEAR)
+    mMonth = mCalendar.get(Calendar.MONTH)
+    mDay = mCalendar.get(Calendar.DAY_OF_MONTH)
+
+    mCalendar.time = Date()
+
+    // store date in string format
+    val mDate = remember { mutableStateOf("") }
+
+        val mDatePickerDialog = DatePickerDialog(
+        mContext,
+        { _: DatePicker, mYear: Int, mMonth: Int, mDayOfMonth: Int ->
+            mDate.value = "$mYear-${mMonth+1}-$mDayOfMonth"
+        }, mYear, mMonth, mDay
+    )
+
+
+        Button(onClick = {
+            mDatePickerDialog.show()
+        }, colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primaryVariant) ) {
+            Text(text = buttonText, color = MaterialTheme.colors.onSecondary)
+        }
+    //}
+    return mDate.value
+
+}
 @Composable
 fun MyAlertDialog(
     title: @Composable () -> Unit,
@@ -293,6 +385,7 @@ fun MyAlertDialog(
         }
     }
 }
+
 
 
 
