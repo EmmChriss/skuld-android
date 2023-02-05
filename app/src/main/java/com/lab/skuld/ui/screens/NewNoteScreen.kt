@@ -138,7 +138,7 @@ fun ShowNewNoteScreen(event: Event = emptyEventOrTask){
                     dismissButton = {
                         TextButton(
                             onClick = { isDialogVisible = false },
-                            content = { Text("nevermind") },
+                            content = { Text("nevermind", color = MaterialTheme.colors.onSecondary) },
                         )
                     },
                     confirmButton = {
@@ -165,13 +165,13 @@ fun ShowNewNoteScreen(event: Event = emptyEventOrTask){
             val header = textData.header
             val value = textData.value
             if(index>-1) {
-                Text(header, modifier = Modifier.padding(5.dp), fontSize = 20.sp)
+                Text(header, modifier = Modifier.padding(5.dp), fontSize = 20.sp, color = MaterialTheme.colors.onPrimary)
                 TextField(
                     value = value,
                     onValueChange = {
                         textElementsValues[index] = textElementsValues[index].copy(value = it)
                     },
-                    label = { Text("Content") },
+                    label = { Text("Content", color = MaterialTheme.colors.onPrimary) },
                     modifier = Modifier
                         .clip(RoundedCornerShape(10.dp)),
 
@@ -184,7 +184,9 @@ fun ShowNewNoteScreen(event: Event = emptyEventOrTask){
                         Text(
                             "Delete element",
                             modifier = Modifier.padding(2.dp),
-                            fontSize = 10.sp
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colors.onPrimary
+
                         )
                     },
                 )
@@ -199,7 +201,7 @@ fun ShowNewNoteScreen(event: Event = emptyEventOrTask){
             onValueChange = {
                 documentTitle = it
             },
-            label = { Text("Title") },
+            label = { Text("Title", color = MaterialTheme.colors.onPrimary) },
             modifier = Modifier
                 .padding(10.dp)
                 .align(Alignment.CenterHorizontally)

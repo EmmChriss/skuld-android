@@ -13,13 +13,11 @@ import com.lab.skuld.ui.UIContextViewModel
 private val DarkColorPalette = darkColors(
     primary = Color(0xFF111111),
     primaryVariant = Color(0xFF777777),
-    /*secondary = Color(0xFFb71c1c),
-    secondaryVariant = Color(0xFFb71c1c),*/
-    secondary = Color(0xFF111111),
-    secondaryVariant = Color(0xFF111111),
+    secondary = Color(0xFFa60b0b),
+    secondaryVariant = Color(0xFFa60b0b),
     background = Color.Black,
     surface = Color.Black,
-    onPrimary = Color(0xFFffffff),
+    onPrimary = Color(0xFFEEEEEE),
     onSecondary = Color(0xFFffffff),
     onBackground = Color.White,
     onSurface = Color.White,
@@ -38,6 +36,20 @@ private val LightColorPalette = lightColors(
     onBackground = Color.Black,
     onSurface = Color.Black,
 )
+val randomNextInt = { max: Int -> (Math.random() * max).toInt() }
+var ClownColorPalette = lightColors(
+    primary = Color(-0x1000000 or randomNextInt(0xFFFFFF)),
+    primaryVariant = Color(-0x1000000 or randomNextInt(0xFFFFFF)),
+    secondary = Color(-0x1000000 or randomNextInt(0xFFFFFF)),
+    secondaryVariant = Color(0xFFb71c1c),
+    background = Color.White,
+    surface = Color.White,
+    onPrimary = Color(0xFFffffff),
+    onSecondary = Color(0xFFffffff),
+    onBackground = Color.Black,
+    onSurface = Color.Black,
+)
+
 
 @Composable
 fun SkuldFrontendTheme(
@@ -50,6 +62,9 @@ fun SkuldFrontendTheme(
         DarkColorPalette
     } else if (uiContextViewModel.theme == "Light") {
         LightColorPalette
+    }
+    else if (uiContextViewModel.theme == "Clown"){
+        ClownColorPalette
     }
     else {
         if (darkTheme) {
