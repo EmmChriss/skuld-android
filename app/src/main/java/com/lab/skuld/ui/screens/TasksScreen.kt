@@ -1,6 +1,5 @@
 package com.lab.skuld.ui.screens
 
-
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,12 +25,13 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.lab.skuld.model.Event
 import com.lab.skuld.ui.Screen
 import com.lab.skuld.ui.UIContextViewModel
 import com.lab.skuld.ui.rememberLiveArray
 
 
-fun TaskToEvent(task: Task): Event{
+fun TaskToEvent(task: Task): Event {
     val event = Event(id = task.id, title = task.title, checked = task.checked, contents = task.contents, endDate = null, startDate = null)
     return event
 }

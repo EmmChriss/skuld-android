@@ -1,8 +1,5 @@
 package com.lab.skuld.ui.screens
 
-
-
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,60 +32,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.lab.skuld.model.CreateEvent
+import com.lab.skuld.model.Event
 import com.lab.skuld.ui.Screen
 import com.lab.skuld.ui.UIContextViewModel
-import java.util.Date
-
-
-class MaybeEvent {
-    @DocumentId
-    val id = ""
-    val startDate: Timestamp? = null
-    val endDate: Timestamp? = null
-    val title: String? = null
-    val checked: Boolean? = null
-    val contents: String? = null
-}
-
-data class Event(
-    val id: String,
-    val startDate: Date?,
-    val endDate: Date?,
-    val title: String,
-    val checked: Boolean?,
-    val contents: String?,
-)
-
-data class EventNoID(
-    val startDate: Date?,
-    val endDate: Date?,
-    val title: String,
-    val checked: Boolean?,
-    val contents: String?,
-)
-
-fun maybeToEvent(maybe: MaybeEvent): Event? {
-    if ((maybe.startDate == null && maybe.endDate == null) || maybe.title == null)
-        return null
-
-    return Event(
-        maybe.id,
-        maybe.startDate?.toDate(),
-        maybe.endDate?.toDate(),
-        maybe.title,
-        maybe.checked,
-        maybe.contents
-    )
-}
-
-
-
-
+import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 fun eventToDocument(event: Event): Document {
     val lines = event.contents?.split("\n") ?: emptyList()
@@ -106,16 +60,13 @@ fun documentToEvent(document: Document): Event {
     return Event(id = "", startDate = null, endDate = null, title = document.header, checked = true, contents = contents)
 }
 
-fun documentToEventNoID(document: Document): EventNoID {
+fun documentToEventNoID(document: Document): CreateEvent {
     val contents = document.documentContents.joinToString("\n") { data -> "${data.header} ${data.value}" }
-    return EventNoID( startDate = null, endDate = null, title = document.header, checked = true, contents = contents)
+    return CreateEvent( startDate = null, endDate = null, title = document.header, checked = true, contents = contents)
 }
+fun now(): LocalDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 
-
-
-
-val emptyEventorTask = Event(id = "", startDate = Date(), endDate = Date(), title = "New Task/Event", checked = true, contents = "")
-
+val emptyEventOrTask = Event(id = "", startDate = now(), endDate = now(), title = "New Task/Event", checked = true, contents = "")
 
 data class TextData(var index: Int, var header: String, var value: String)
 data class Document(var header: String= "", var image: Painter? = null, var  documentContents: List<TextData> = listOf(),var checked: Boolean? = null)
@@ -128,12 +79,12 @@ data class Document(var header: String= "", var image: Painter? = null, var  doc
 
 
 @Composable
-fun ShowNewNoteScreen(documentt: Event = emptyEventorTask){
+fun ShowNewNoteScreen(event: Event = emptyEventOrTask){
     var isNewTask = false
-    if(documentt.id == ""){
+    if(event.id == ""){
         isNewTask = true
     }
-    val document = eventToDocument(documentt)
+    val document = eventToDocument(event)
     val viewModel: UIContextViewModel = viewModel()
 
 
@@ -150,16 +101,12 @@ fun ShowNewNoteScreen(documentt: Event = emptyEventorTask){
         textElementsValues += preList
     }
 
-
-
-
     Column(modifier = Modifier
         .padding(16.dp)
         .verticalScroll(rememberScrollState())
         .fillMaxWidth()
         .defaultMinSize(minHeight = 500.dp)
     ) {
-
 
         @Composable
         fun NewElementDialog() {
@@ -299,7 +246,7 @@ fun ShowNewNoteScreen(documentt: Event = emptyEventorTask){
                 val documentUp = documentToEventNoID(document)
                 Firebase.firestore
                     .collection("users/data/${Firebase.auth.currentUser!!.uid}")
-                    .document(documentt.id)
+                    .document(event.id)
                     .set(documentUp)
                     .addOnSuccessListener {
                         viewModel.nav.push(Screen.TaskP(documentToEvent(document)))
@@ -315,13 +262,6 @@ fun ShowNewNoteScreen(documentt: Event = emptyEventorTask){
 
     }
 }
-
-
-
-
-
-
-
 
 @Composable
 fun MyAlertDialog(

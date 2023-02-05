@@ -49,16 +49,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import com.lab.skuld.ui.screens.Event
+import com.lab.skuld.model.Event
 import com.lab.skuld.ui.screens.ShowCalendarScreen
 import com.lab.skuld.ui.screens.ShowLoginScreen
 import com.lab.skuld.ui.screens.ShowNewNoteScreen
 import com.lab.skuld.ui.screens.ShowNoteScreen
 import com.lab.skuld.ui.screens.ShowSettingsScreen
 import com.lab.skuld.ui.screens.ShowTasksScreen
+import com.lab.skuld.ui.screens.emptyEventOrTask
 import com.lab.skuld.ui.theme.SkuldFrontendTheme
 import kotlinx.coroutines.launch
-import java.util.Date
 
 // Main Composable entry-point
 @Composable
@@ -91,19 +91,16 @@ fun Auth(content: @Composable () -> Unit) {
 
 }
 
-val emptyEvent = Event(id = "", startDate = Date(), endDate = null, title = "", checked = null, contents = null)
 sealed class Screen(val title: String, val content: @Composable () -> Unit, val onBack: Screen? = null ) {
-
-
     class Custom(
         title: String,
         content: @Composable () -> Unit,
         onBack: Screen?
     ) : Screen(title, content, onBack)
 
-    class NewTask(event: Event) : Screen(
+    class NewTask(document: Event = emptyEventOrTask) : Screen(
         title = "New Task",
-        content = { ShowNewNoteScreen(event)},
+        content = { ShowNewNoteScreen(document) },
         onBack = Tasks()
     )
     class TaskP(event: Event) : Screen(
@@ -129,6 +126,8 @@ sealed class Screen(val title: String, val content: @Composable () -> Unit, val 
 }
 
 data class Navigator(
+    /// Replace top-level Screen with given Screen, same as pop(), push(screen)
+    val replace: (Screen) -> Unit,
     val push: (Screen) -> Unit,
     val pop: () -> Unit,
     val set: (Screen) -> Unit,
@@ -177,7 +176,7 @@ fun Navigation() {
         /* All screens */
         Screen.Tasks(),
         Screen.Calendar(),
-        Screen.NewTask(emptyEvent),
+        Screen.NewTask(),
         Screen.Settings(),
     ) }
     var currentMenuOption: Screen by remember { mutableStateOf(
@@ -199,6 +198,15 @@ fun Navigation() {
     val viewModel: UIContextViewModel = viewModel()
     LaunchedEffect(viewModel) {
         viewModel.setNav(Navigator(
+            replace = { screen ->
+                navigateTo(
+                    Screen.Custom(
+                        title = screen.title,
+                        content = screen.content,
+                        onBack = currentMenuOption.onBack
+                    )
+                )
+            },
             push = { screen ->
                 navigateTo(
                     Screen.Custom(
@@ -329,7 +337,7 @@ fun Navigation() {
         floatingActionButton = {
             FloatingActionButton(
                 content = { Icon(Icons.Filled.Add, contentDescription = "Localized description") },
-                onClick = { currentMenuOption = Screen.NewTask(emptyEvent) }
+                onClick = { currentMenuOption = Screen.NewTask() }
             )
         },
         content = {
