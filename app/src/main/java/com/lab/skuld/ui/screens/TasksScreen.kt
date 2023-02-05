@@ -16,6 +16,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -70,7 +71,7 @@ fun ShowTasksScreen() {
     val query = Firebase.firestore
         .collection("users/data/${Firebase.auth.currentUser!!.uid}")
 
-    val documents: List<Task> = rememberLiveArray(
+    val documents: List<Task> by rememberLiveArray(
         MaybeTask::class.java,
         query,
         ::maybeToTask,
