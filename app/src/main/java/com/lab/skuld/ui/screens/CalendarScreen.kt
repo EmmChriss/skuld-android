@@ -1,6 +1,5 @@
 package com.lab.skuld.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,7 +22,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -37,14 +35,11 @@ import com.lab.skuld.model.maybeToEvent
 import com.lab.skuld.ui.UIContextViewModel
 import com.lab.skuld.ui.rememberLiveArray
 import com.lab.skuld.ui.widget.Calendar
-import com.lab.skuld.ui.widget.CalendarState
 import com.lab.skuld.ui.widget.rememberCalendarState
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
-import kotlinx.datetime.daysUntil
 import kotlinx.datetime.plus
 import kotlinx.datetime.toJavaLocalTime
 import java.time.format.DateTimeFormatter
@@ -130,35 +125,42 @@ fun ShowCalendarScreen() {
         }
     }
 
+    fun dateToIdx(date: LocalDate): Int? =
+        headerIndexes.first[calendarState.selectedDate]
+
+    fun idxToDate(idx: Int): LocalDate? =
+        headerIndexes.second.lastOrNull {
+            idx >= it.first
+        }?.second
+
     val scrollState = rememberLazyListState()
+    val visibleItem by snapshotFlow { scrollState.firstVisibleItemIndex }.collectAsState(0)
+    var animationState by remember { mutableStateOf(false) }
 
-    var animationState: String? by remember { mutableStateOf(null) }
     LaunchedEffect(calendarState.selectedDate) {
-        val idx = headerIndexes.first[calendarState.selectedDate]
-        if (idx != null && animationState == null) {
-            animationState = "scroll"
-            scrollState.animateScrollToItem(idx)
-            animationState = null
-        } else if (animationState == "set") {
-            animationState = null
+        if (animationState) {
+            animationState = false
+            return@LaunchedEffect
+        }
+
+        val currentDate = idxToDate(visibleItem)
+        val desiredIdx = dateToIdx(calendarState.selectedDate)
+        if (desiredIdx != null && currentDate != calendarState.selectedDate) {
+            animationState = true
+            scrollState.animateScrollToItem(desiredIdx)
+            animationState = false
         }
     }
 
-    val firstVisibleHeaderFlow = remember {
-        snapshotFlow {
-            var firstVisibleItem = scrollState.firstVisibleItemIndex
-            headerIndexes.second.lastOrNull {
-                firstVisibleItem >= it.first
-            }?.second
-        }
-    }
-    val firstVisibleHeader by firstVisibleHeaderFlow.collectAsState(null)
+    LaunchedEffect(visibleItem) {
+        if (animationState)
+            return@LaunchedEffect
 
-    LaunchedEffect(firstVisibleHeader) {
-        if (firstVisibleHeader != null && animationState == null) {
-            animationState = "set"
-            calendarState.selectedDate = firstVisibleHeader!!
-            calendarState.visibleDate = firstVisibleHeader!!
+        val desiredDate = idxToDate(visibleItem)
+        if (desiredDate != null && desiredDate != calendarState.selectedDate && !animationState) {
+            animationState = true
+            calendarState.selectedDate = desiredDate
+            calendarState.visibleDate = desiredDate
         }
     }
 
