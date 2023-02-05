@@ -36,6 +36,7 @@ fun TaskToEvent(task: Task): Event {
     return event
 }
 
+
 class MaybeTask {
     @DocumentId
     val id = ""
@@ -80,7 +81,6 @@ fun ShowTasksScreen() {
 
     LazyColumn(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
         items(
-
             count = documents.size,
             key = { doc -> documents[doc].id }
         ) {

@@ -6,30 +6,24 @@ import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-/*
-private val DarkColorPalette = darkColors(
-    primary = Purple200,
-    primaryVariant = Purple700,
-    secondary = Teal200
-)*/
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.lab.skuld.ui.UIContextViewModel
+
 
 private val DarkColorPalette = darkColors(
-    primary = Color(0xFF212121),
-    primaryVariant = Color(0xFF000000),
-    secondary = Color(0xFF7f0000)
+    primary = Color(0xFF111111),
+    primaryVariant = Color(0xFF777777),
+    /*secondary = Color(0xFFb71c1c),
+    secondaryVariant = Color(0xFFb71c1c),*/
+    secondary = Color(0xFF111111),
+    secondaryVariant = Color(0xFF111111),
+    background = Color.Black,
+    surface = Color.Black,
+    onPrimary = Color(0xFFffffff),
+    onSecondary = Color(0xFFffffff),
+    onBackground = Color.White,
+    onSurface = Color.White,
 )
-/*
-private val LightColorPalette = lightColors(
-    primary = Purple500,
-    primaryVariant = Purple700,
-    secondary = Teal200,
-    background = Color.White,
-    surface = Color.White,
-    onPrimary = Color.White,
-    onSecondary = Color.Black,
-    onBackground = Color.Black,
-    onSurface = Color.Black,
-)*/
 
 
 private val LightColorPalette = lightColors(
@@ -47,14 +41,27 @@ private val LightColorPalette = lightColors(
 
 @Composable
 fun SkuldFrontendTheme(
+
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val colors = if (darkTheme) {
+    val uiContextViewModel: UIContextViewModel = viewModel()
+    var colors = if (uiContextViewModel.theme == "Dark") {
         DarkColorPalette
-    } else {
+    } else if (uiContextViewModel.theme == "Light") {
         LightColorPalette
     }
+    else {
+        if (darkTheme) {
+            DarkColorPalette
+        } else {
+            LightColorPalette
+        }
+    }
+
+
+
+
 
     MaterialTheme(
         colors = colors,
