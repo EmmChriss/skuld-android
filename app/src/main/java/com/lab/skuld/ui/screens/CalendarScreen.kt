@@ -20,13 +20,16 @@ import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.lab.skuld.model.Event
 import com.lab.skuld.model.MaybeEvent
 import com.lab.skuld.model.maybeToEvent
+import com.lab.skuld.ui.UIContextViewModel
 import com.lab.skuld.ui.rememberLiveArray
 import com.lab.skuld.ui.widget.Calendar
 import com.lab.skuld.ui.widget.CalendarState
@@ -47,12 +50,17 @@ fun ShowCalendarScreen() {
         ::maybeToEvent
     )
 
+    val uiContextViewModel: UIContextViewModel = viewModel()
+
     val calendarState = rememberCalendarState()
 
     val filteredEvents = events.filter { event ->
         (event.startDate != null && event.startDate.date <= calendarState.selectedDate) &&
-        (event.endDate != null && event.endDate.date >= calendarState.selectedDate)
-        /* TODO: introduce filtering based on query string */
+        (event.endDate != null && event.endDate.date >= calendarState.selectedDate) &&
+        uiContextViewModel.searchBar.query.text.split(' ').all {
+            event.title.lowercase().contains(it.lowercase()) ||
+                (event.contents != null && event.contents.lowercase().contains(it.lowercase()))
+        }
     }.map {
         val associatedTime = when {
             it.startDate?.date == calendarState.selectedDate -> it.startDate.time
