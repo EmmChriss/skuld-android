@@ -1,68 +1,196 @@
 package com.lab.skuld.ui.screens
 
+import android.content.ContentValues.TAG
+import android.os.Environment
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.RadioButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.lab.skuld.ui.UiContextViewModel
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import com.google.gson.Gson
+import com.lab.skuld.ui.UIContextViewModel
+import com.lab.skuld.ui.rememberLiveArray
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.File
 
 @Composable
 fun ShowSettingsScreen() {
 
-    Column {
+    Column (modifier = Modifier.padding(25.dp)){
         Text("Settings", style = MaterialTheme.typography.h5)
         Spacer(modifier = Modifier.padding(16.dp))
         Text("Theme", style = MaterialTheme.typography.h6)
         RadioButtonsThemes()
+        Spacer(modifier = Modifier.padding(16.dp))
+        Text("Export data", style = MaterialTheme.typography.h6)
+        ExportButton()
+        Spacer(modifier = Modifier.padding(10.dp))
+        ImportButton()
     }
 }
+/*
+///////////////////////First attempt, read at own risk////////////////////////
+@Composable
+fun ExportButton() {
+    val context = LocalContext.current
+    val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "export.txt")
+    //val file = File(context.getExternalFilesDir("../../../../Downloads"), "saved_text.txt")
+    val query = Firebase.firestore.collection("users/data/${Firebase.auth.currentUser!!.uid}")
+    val documents: List<Task> = rememberLiveArray(
+        MaybeTask::class.java,
+        query,
+        ::maybeToTask,
+    )
+    val resultMessage = remember { mutableStateOf("") }
 
 
+    Button(onClick = {
+        var isFirst = true
+        for (document in documents) {
+            Log.i(TAG, document.toString())
+            if(isFirst) {
+                file.writeText(document.toString() + "\n")
+                isFirst = false
+            }
+            else
+                file.appendText(document.toString()+ "\n")
+        }
+
+        Log.i(TAG, "Saved to ${file.absolutePath}")
+        resultMessage.value = "Saved to ${file.absolutePath}"
+    }) {
+        Text("EXPORT")
+    }
+    Text(resultMessage.value)
+}
+*/
+@Composable
+fun ExportButton() {
+    val context = LocalContext.current
+    val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "export.json")
+    val query = Firebase.firestore.collection("users/data/${Firebase.auth.currentUser!!.uid}")
+    val documents: List<Task> = rememberLiveArray(
+        MaybeTask::class.java,
+        query,
+        ::maybeToTask,
+    )
+    val resultMessage = remember { mutableStateOf("") }
+
+    Button(onClick = {
+        val jsonArray = JSONArray()
+
+        for (document in documents) {
+            val jsonObject = JSONObject()
+            jsonObject.put("id", document.id)
+            jsonObject.put("title", document.title)
+            jsonObject.put("checked", document.checked)
+            jsonObject.put("contents", document.contents)
+
+            jsonArray.put(jsonObject)
+        }
+
+        file.writeText(jsonArray.toString(2))
+
+        Log.i(TAG, "Saved to ${file.absolutePath}")
+        resultMessage.value = "Saved to ${file.absolutePath}"
+    }) {
+        Text("EXPORT")
+    }
+    Text(resultMessage.value)
+}
+
+@Composable
+fun ImportButton() {
+    val context = LocalContext.current
+    val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "export.json")
+    val gson = Gson()
+    val resultMessage = remember { mutableStateOf("") }
+
+    Button(onClick = {
+        val tasksJson = file.readText()
+        val tasks = gson.fromJson(tasksJson, Array<Task>::class.java)
+        val eventNoIDs = tasks.map { task ->
+            EventNoID(
+                startDate = null,
+                endDate = null,
+                title = task.title,
+                checked = task.checked,
+                contents = task.contents
+            )
+        }
+
+        for(event in eventNoIDs) {
+            Firebase.firestore
+                .collection("users/data/${Firebase.auth.currentUser!!.uid}")
+                .document()
+                .set(event)
+                .addOnSuccessListener {
+                    Log.i(TAG, "Upload Success")
+                }
+                .addOnFailureListener {
+                    Log.w(TAG, "Upload Failed")
+                }
+        }
+
+        resultMessage.value = "Imported from ${file.absolutePath}"
+    }) {
+        Text("IMPORT")
+    }
+    Text(resultMessage.value)
+}
 
 
 @Composable
 fun RadioButtonsThemes() {
-    val uiContextViewModel: UiContextViewModel = viewModel()
+    val uiContextViewModel: UIContextViewModel = viewModel()
     val radioOptions = listOf("Light", "Dark", "C for 'Coming soon'")
-    //val (selectedOption) = remember { mutableStateOf(uiContextViewModel.theme ) }
 
     fun onOptionSelected(text: String) {
         when (text) {
             "Light" -> {
-                //colors = LightColorPalette
                 uiContextViewModel.theme = "Light"
             }
             "Dark" -> {
-                //colors = DarkColorPalette
                 uiContextViewModel.theme = "Dark"
             }
             "C for 'Coming soon'" -> {
-                //colors = LightColorPalette
                 uiContextViewModel.theme = "C for 'Coming soon'"
             }
         }
     }
+
     Column {
         radioOptions.forEach { text ->
             Row(
-                Modifier
+
+                modifier = Modifier
                     .fillMaxWidth()
                     .selectable(
                         selected = (text == uiContextViewModel.theme),
                         onClick = {
                             onOptionSelected(text)
                         }
-                    )
-                    .padding(horizontal = 16.dp)
+                    ),
+                verticalAlignment = Alignment.CenterVertically
+
             ) {
                 RadioButton(
                     selected = (text == uiContextViewModel.theme),
@@ -79,17 +207,4 @@ fun RadioButtonsThemes() {
 }
 
 
-/*
-private val LightColorPalette = lightColors(
-    primary = Color(0xFF212121),
-    primaryVariant = Color(0xFFAAAAAA),
-    secondary = Color(0xFFb71c1c),
-    secondaryVariant = Color(0xFFb71c1c),
-    background = Color.White,
-    surface = Color.White,
-    onPrimary = Color(0xFFffffff),
-    onSecondary = Color(0xFFffffff),
-    onBackground = Color.Black,
-    onSurface = Color.Black,
-)
-*/
+

@@ -7,7 +7,7 @@ import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.lab.skuld.ui.UiContextViewModel
+import com.lab.skuld.ui.UIContextViewModel
 
 
 private val DarkColorPalette = darkColors(
@@ -45,7 +45,7 @@ fun SkuldFrontendTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val uiContextViewModel: UiContextViewModel = viewModel()
+    val uiContextViewModel: UIContextViewModel = viewModel()
     var colors = if (uiContextViewModel.theme == "Dark") {
         DarkColorPalette
     } else {

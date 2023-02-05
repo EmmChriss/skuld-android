@@ -380,44 +380,4 @@ private fun ProviderButtons(viewModel: LoginScreenViewModel) {
     )
 
 
-    /* Local option separator */
-    Spacer(modifier = Modifier.height(4.dp))
-    Text(
-        modifier = Modifier.fillMaxWidth(),
-        textAlign = TextAlign.Center,
-        style = MaterialTheme.typography.caption,
-        text = "Or use local account"
-    )
-    Spacer(modifier = Modifier.height(2.dp))
-
-    /* Local */
-    OutlinedButton(
-        border = ButtonDefaults.outlinedBorder.copy(width = 1.dp),
-        modifier = Modifier.fillMaxWidth().height(50.dp),
-        onClick = { viewModel.signInLocally() },
-        content = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                content = {
-                    // Icon(
-                    //     tint = Color.Unspecified,
-                    //     painter = painterResource(id = R.drawable.googleg_standard_color_18),
-                    //     contentDescription = null,
-                    // )
-                    Text(
-                        style = MaterialTheme.typography.button,
-                        color = MaterialTheme.colors.onSurface,
-                        text = "Local"
-                    )
-                    Icon(
-                        tint = Color.Transparent,
-                        imageVector = Icons.Default.MailOutline,
-                        contentDescription = null,
-                    )
-                }
-            )
-        }
-    )
 }
