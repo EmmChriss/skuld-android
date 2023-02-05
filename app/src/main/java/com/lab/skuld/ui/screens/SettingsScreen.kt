@@ -15,6 +15,7 @@ import androidx.compose.material.RadioButton
 import androidx.compose.material.Text
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -95,7 +96,7 @@ fun ExportButton() {
     val context = LocalContext.current
     val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "export.json")
     val query = Firebase.firestore.collection("users/data/${Firebase.auth.currentUser!!.uid}")
-    val documents: List<Event> = rememberLiveArray(
+    val documents: List<Event> by rememberLiveArray(
         MaybeEvent::class.java,
         query,
         ::maybeToEvent,

@@ -2,6 +2,8 @@ package com.lab.skuld.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,7 +30,7 @@ fun <T, F> rememberLiveArray(
     = { _, _, _, _ -> },
     onError : (FirebaseFirestoreException) -> Unit
     = { _ -> }
-) : List<F> {
+) : State<List<F>> {
     var documents : List<F> by remember { mutableStateOf(listOf()) }
     fun updateDocuments(iter: Iterable<T>) {
         documents = iter
@@ -66,5 +68,5 @@ fun <T, F> rememberLiveArray(
         }
     }
 
-    return documents
+    return remember { derivedStateOf { documents } }
 }
