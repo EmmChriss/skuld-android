@@ -1,14 +1,6 @@
 package com.lab.skuld.ui.screens
 
-//import com.firebase.ui.firestore.FirestoreArray
 
-/*import com.firebase.ui.common.ChangeEventType
-import com.firebase.ui.firestore.CachingSnapshotParser
-import com.firebase.ui.firestore.ChangeEventListener
-import com.firebase.ui.firestore.ClassSnapshotParser*/
-//import com.lab.skuld.ui.maybeToEvent
-
-//import androidx.compose.foundation.layout.BoxScopeInstance.align
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

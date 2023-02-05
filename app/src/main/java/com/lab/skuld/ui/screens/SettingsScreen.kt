@@ -48,6 +48,7 @@ fun ShowSettingsScreen() {
 }
 /*
 ///////////////////////First attempt, read at own risk////////////////////////
+//this stays
 @Composable
 fun ExportButton() {
     val context = LocalContext.current
@@ -161,10 +162,13 @@ fun ImportButton() {
 @Composable
 fun RadioButtonsThemes() {
     val uiContextViewModel: UIContextViewModel = viewModel()
-    val radioOptions = listOf("Light", "Dark", "C for 'Coming soon'")
+    val radioOptions = listOf("System theme","Light", "Dark", "C for 'Coming soon'")
 
     fun onOptionSelected(text: String) {
         when (text) {
+            "System theme" -> {
+                uiContextViewModel.theme = "System theme"
+            }
             "Light" -> {
                 uiContextViewModel.theme = "Light"
             }

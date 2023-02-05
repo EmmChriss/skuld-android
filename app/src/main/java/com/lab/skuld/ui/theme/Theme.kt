@@ -48,9 +48,19 @@ fun SkuldFrontendTheme(
     val uiContextViewModel: UIContextViewModel = viewModel()
     var colors = if (uiContextViewModel.theme == "Dark") {
         DarkColorPalette
-    } else {
+    } else if (uiContextViewModel.theme == "Light") {
         LightColorPalette
     }
+    else {
+        if (darkTheme) {
+            DarkColorPalette
+        } else {
+            LightColorPalette
+        }
+    }
+
+
+
 
 
     MaterialTheme(

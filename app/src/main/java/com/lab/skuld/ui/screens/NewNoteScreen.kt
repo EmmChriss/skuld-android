@@ -3,7 +3,6 @@ package com.lab.skuld.ui.screens
 
 
 
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,8 +31,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -156,17 +153,11 @@ fun ShowNewNoteScreen(documentt: Event = emptyEventorTask){
 
 
 
-    val focusManager = LocalFocusManager.current
     Column(modifier = Modifier
         .padding(16.dp)
         .verticalScroll(rememberScrollState())
         .fillMaxWidth()
         .defaultMinSize(minHeight = 500.dp)
-        .pointerInput(Unit) {
-            detectTapGestures(onTap = {
-                focusManager.clearFocus()
-            })
-        }
     ) {
 
 
