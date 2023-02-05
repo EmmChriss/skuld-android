@@ -32,6 +32,7 @@ import com.google.firebase.ktx.Firebase
 import com.lab.skuld.model.Event
 import com.lab.skuld.model.MaybeEvent
 import com.lab.skuld.model.maybeToEvent
+import com.lab.skuld.ui.Screen
 import com.lab.skuld.ui.UIContextViewModel
 import com.lab.skuld.ui.rememberLiveArray
 import com.lab.skuld.ui.widget.Calendar
@@ -91,8 +92,8 @@ fun ShowCalendarScreen() {
                     var currentDate = it.startDate!!.date
                     while (currentDate <= it.endDate!!.date) {
                         val associatedDateTime = when {
-                            it.startDate!!.date == currentDate -> it.startDate!!.time
-                            it.endDate!!.date == currentDate -> it.endDate!!.time
+                            it.startDate.date == currentDate -> it.startDate.time
+                            it.endDate.date == currentDate -> it.endDate.time
                             else -> null
                         }
                         this.add(CalendarShownEvent(it, currentDate, associatedDateTime))
@@ -125,35 +126,42 @@ fun ShowCalendarScreen() {
         }
     }
 
+    fun dateToIdx(date: LocalDate): Int? =
+        headerIndexes.first[date]
+
+    fun idxToDate(idx: Int): LocalDate? =
+        headerIndexes.second.lastOrNull {
+            idx >= it.first
+        }?.second
+
     val scrollState = rememberLazyListState()
+    val visibleItem by snapshotFlow { scrollState.firstVisibleItemIndex }.collectAsState(0)
+    var animationState by remember { mutableStateOf(false) }
 
-    var animationState: String? by remember { mutableStateOf(null) }
     LaunchedEffect(calendarState.selectedDate) {
-        val idx = headerIndexes.first[calendarState.selectedDate]
-        if (idx != null && animationState == null) {
-            animationState = "scroll"
-            scrollState.animateScrollToItem(idx)
-            animationState = null
-        } else if (animationState == "set") {
-            animationState = null
+        if (animationState) {
+            animationState = false
+            return@LaunchedEffect
+        }
+
+        val currentDate = idxToDate(visibleItem)
+        val desiredIdx = dateToIdx(calendarState.selectedDate)
+        if (desiredIdx != null && currentDate != calendarState.selectedDate) {
+            animationState = true
+            scrollState.animateScrollToItem(desiredIdx)
+            animationState = false
         }
     }
 
-    val firstVisibleHeaderFlow = remember {
-        snapshotFlow {
-            var firstVisibleItem = scrollState.firstVisibleItemIndex
-            headerIndexes.second.lastOrNull {
-                firstVisibleItem >= it.first
-            }?.second
-        }
-    }
-    val firstVisibleHeader by firstVisibleHeaderFlow.collectAsState(null)
+    LaunchedEffect(visibleItem, aggregatedEvents) {
+        if (animationState)
+            return@LaunchedEffect
 
-    LaunchedEffect(firstVisibleHeader) {
-        if (firstVisibleHeader != null && animationState == null) {
-            animationState = "set"
-            calendarState.selectedDate = firstVisibleHeader!!
-            calendarState.visibleDate = firstVisibleHeader!!
+        val desiredDate = idxToDate(visibleItem)
+        if (desiredDate != null && desiredDate != calendarState.selectedDate && !animationState) {
+            animationState = true
+            calendarState.selectedDate = desiredDate
+            calendarState.visibleDate = desiredDate
         }
     }
 
@@ -177,7 +185,7 @@ fun ShowCalendarScreen() {
                     key = { Pair(it.event, it.shownOn) },
                     contentType = { "ITEM" }
                 ) {
-                    ShowEvent(entry.key, it)
+                    ShowEvent(entry.key, it, uiContextViewModel)
                 }
             }
 
@@ -192,8 +200,9 @@ fun ShowCalendarScreen() {
 
 fun formatTime(t: LocalTime): String = t.toJavaLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun ShowEvent(calendarHeader: CalendarHeader, calendarEvent: CalendarShownEvent) {
+fun ShowEvent(calendarHeader: CalendarHeader, calendarEvent: CalendarShownEvent, uiContextViewModel: UIContextViewModel) {
     val evt = calendarEvent.event
     Box(
         modifier = Modifier
@@ -201,10 +210,11 @@ fun ShowEvent(calendarHeader: CalendarHeader, calendarEvent: CalendarShownEvent)
             .wrapContentHeight()
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
-        Card(
+        Card (
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight(),
+            onClick = { uiContextViewModel.nav.push(Screen.TaskP(calendarEvent.event)) },
             elevation = 4.dp
         ) {
             Row(
